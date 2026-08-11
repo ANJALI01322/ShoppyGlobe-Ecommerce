@@ -1,90 +1,68 @@
-/* Notfound.css */
+/* ============================================================
+   NOT FOUND — PvX Dark Teal Theme
+   ============================================================ */
 
-/* Container styling */
 .error {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 80vh;
-    /* almost full viewport height */
-    text-align: center;
-    background-color: #f8f9fa;
-    font-family: 'Arial', sans-serif;
-    padding: 1rem;
-    animation: fadeIn 1s ease-in-out;
-   
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  text-align: center;
+  background: var(--bg, #050a0f);
+  font-family: 'Outfit', system-ui, sans-serif;
+  padding: 2rem;
+  animation: fadeIn 0.6s ease both;
+  gap: 20px;
 }
 
-/* Heading style */
 .error h2 {
-    font-size: 3rem;
-    color: #dc3545;
-    /* red for error */
-    margin-bottom: 2rem;
-    animation: bounce 1s infinite alternate;
-    
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #00d4aa, #00e5c0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+  animation: floatBounce 1.6s ease-in-out infinite alternate;
 }
 
-/* Button style */
+.error p {
+  color: rgba(240, 244, 248, 0.45);
+  font-size: 16px;
+}
+
 .error button {
-    padding: 0.7rem 1.5rem;
-    font-size: 1rem;
-    font-weight: bold;
-    color: white;
-    background-color: #007bff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
+  padding: 12px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Outfit', system-ui, sans-serif;
+  color: #050a0f;
+  background: linear-gradient(135deg, #00d4aa, #00a87f);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 212, 170, 0.35);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .error button:hover {
-    background-color: #0056b3;
-    transform: scale(1.1) rotate(-2deg);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(0, 212, 170, 0.5);
 }
-
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes bounce {
-    from {
-        transform: translateY(0);
-    }
-
-    to {
-        transform: translateY(-10px);
-    }
+@keyframes floatBounce {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-12px); }
 }
 
-/* Responsive design for tablets */
-@media (max-width: 768px) {
-    .error h2 {
-        font-size: 2.5rem;
-    }
-
-    .error button {
-        font-size: 0.95rem;
-        padding: 0.6rem 1.2rem;
-    }
-}
-
-/* Responsive design for mobile */
 @media (max-width: 480px) {
-    .error h2 {
-        font-size: 2rem;
-    }
-
-    .error button {
-        font-size: 0.9rem;
-        padding: 0.5rem 1rem;
-    }
+  .error h2 { font-size: 1.8rem; }
+  .error button { font-size: 14px; padding: 10px 24px; }
 }

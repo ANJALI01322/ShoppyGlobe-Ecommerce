@@ -26,7 +26,7 @@ function App() {
       <Route path="*" element={<Notfound/>}></Route>
       <Route path="/login" element={<Login/>} />
       <Route path="/register" element={<Register />} />
-      <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+      <Route path="/cart" element={<Cart />} />
 </Routes>
 
 

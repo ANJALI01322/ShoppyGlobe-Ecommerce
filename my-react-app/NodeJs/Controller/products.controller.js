@@ -20,6 +20,7 @@ export const saveData = async (req, res) => {
       description: item.description,
       price: item.price,
       stock: item.stock,
+      category: item.category || "general",
     }));
 
     await Product.insertMany(productsToSave);

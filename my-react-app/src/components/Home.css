@@ -1,195 +1,661 @@
-/* ================= BASE ================= */
+/* ============================================================
+   HOME — PvX Dark Teal Theme
+   ============================================================ */
+
+/* ---- Base ---- */
 .home {
-    font-family: "Inter", system-ui, sans-serif;
-    background: #0b1220;
-    color: #e5e7eb;
-    overflow-x: hidden;
+  font-family: 'Outfit', system-ui, sans-serif;
+  background: var(--bg, #050a0f);
+  color: var(--text, #f0f4f8);
+  overflow-x: hidden;
 }
 
-/* ================= FLOATING MESSAGE ================= */
+/* ---- Floating pill message ---- */
 .floating-msg {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 10px 18px;
-    background: #111827;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 999px;
-    font-size: 0.85rem;
-    animation: floatY 4s ease-in-out infinite;
-    z-index: 10;
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  padding: 9px 18px;
+  background: rgba(0, 212, 170, 0.08);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent, #00d4aa);
+  letter-spacing: 0.3px;
+  animation: floatY 4s ease-in-out infinite;
+  z-index: 10;
+  backdrop-filter: blur(10px);
 }
 
-/* ================= HERO ================= */
+/* ============================================================
+   HERO SECTION
+   ============================================================ */
 .hero {
-    min-height: 100vh;
-    padding: 90px 60px;
-    display: flex;
-    align-items: center;
-    position: relative;
+  position: relative;
+  height: calc(100vh - 80px);
+  min-height: 500px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+  padding: 8px 24px 20px;
+  box-sizing: border-box;
 }
 
-/* ================= BLOBS (SAFE VERSION) ================= */
-.blob {
-    position: absolute;
-    width: 320px;
-    height: 320px;
-    opacity: 0.25;
-    border-radius: 50%;
-    animation: blobFloat 12s ease-in-out infinite;
+/* ---- Animated wave SVG background ---- */
+.hero-waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
 }
 
-.blob-1 {
-    background: #38bdf8;
-    top: -100px;
-    left: -100px;
+.hero-waves path {
+  fill: none;
+  stroke-width: 1px;
+  stroke-linecap: round;
 }
 
-.blob-2 {
-    background: #6366f1;
-    bottom: -120px;
-    right: -120px;
-    animation-delay: 4s;
+.wave-line-left,
+.wave-line-right {
+  stroke: rgba(0, 212, 170, 0.06);
+  stroke-width: 0.8px;
+  animation: flowPulse 6s ease-in-out infinite alternate;
 }
 
-/* ================= FRAME ================= */
-.hero-frame {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 80px 1fr 280px;
-    gap: 60px;
-    position: relative;
-    z-index: 2;
+.wave-line-left.highlight,
+.wave-line-right.highlight {
+  stroke: rgba(0, 212, 170, 0.2);
+  stroke-width: 1.2px;
+  stroke-dasharray: 300 600;
+  animation: flowPulseHighlight 6s ease-in-out infinite alternate, signalFlow 9s linear infinite;
 }
 
-/* ================= SIDE STRIP ================= */
-.side-strip {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    letter-spacing: 0.18em;
-    opacity: 0.6;
+@keyframes flowPulse {
+  0% {
+    stroke: rgba(0, 212, 170, 0.04);
+  }
+  100% {
+    stroke: rgba(0, 212, 170, 0.1);
+  }
 }
 
-/* ================= MAIN ================= */
-.hero-main h1 {
-    font-size: 4.8rem;
-    line-height: 1;
-    font-weight: 800;
-    margin-bottom: 24px;
+@keyframes flowPulseHighlight {
+  0% {
+    stroke: rgba(0, 212, 170, 0.14);
+    filter: drop-shadow(0 0 1px rgba(0, 212, 170, 0.2));
+  }
+  100% {
+    stroke: rgba(0, 212, 170, 0.32);
+    filter: drop-shadow(0 0 4px rgba(0, 212, 170, 0.6));
+  }
 }
 
-.hero-main p {
-    max-width: 460px;
-    font-size: 1.05rem;
-    opacity: 0.85;
+@keyframes signalFlow {
+  from {
+    stroke-dashoffset: 900;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
-/* ================= CTA ================= */
-.cta {
-    display: inline-block;
-    margin-top: 42px;
-    padding: 16px 44px;
-    border-radius: 999px;
-    background: #38bdf8;
-    color: #020617;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-decoration: none;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+/* ---- Radial glow in center ---- */
+.hero::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 500px;
+  background: radial-gradient(ellipse at center bottom, rgba(0, 212, 170, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.cta:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(56, 189, 248, 0.4);
+/* ---- Hero inner ---- */
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
-/* ================= INFO ================= */
-.hero-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 26px;
+/* ---- Badge pill ---- */
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(0, 212, 170, 0.35);
+  border-radius: 999px;
+  padding: 7px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(240, 244, 248, 0.75);
+  background: rgba(0, 212, 170, 0.06);
+  backdrop-filter: blur(10px);
+  animation: fadeDown 0.8s ease both;
+  margin: 0;
+}
+
+.hero-badge-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent, #00d4aa);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0, 212, 170, 0.8);
+  animation: pulse 2s ease infinite;
+}
+
+.hero-badge-tag {
+  background: var(--accent, #00d4aa);
+  color: #050a0f;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 1px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ---- Headline ---- */
+.hero-headline {
+  font-size: clamp(2rem, 5.2vw, 3.8rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  color: #ffffff;
+  animation: fadeUp 0.9s ease 0.2s both;
+  text-align: center;
+  margin: 0;
+}
+
+.hero-headline .teal {
+  background: linear-gradient(135deg, #00d4aa, #00e5c0, #5fffd6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ---- Sub text ---- */
+.hero-sub {
+  font-size: 0.92rem;
+  font-weight: 400;
+  color: rgba(240, 244, 248, 0.55);
+  max-width: 600px;
+  line-height: 1.5;
+  animation: fadeUp 0.9s ease 0.4s both;
+  margin: 0;
+}
+
+/* ---- CTA buttons ---- */
+.hero-ctas {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  animation: fadeUp 0.9s ease 0.6s both;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 0;
+}
+
+.cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 30px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #050a0f;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.2s ease;
+  box-shadow: 0 0 0 rgba(255,255,255,0);
+}
+
+.cta-primary:hover {
+  transform: translateY(-3px);
+  background: var(--accent, #00d4aa);
+  color: #050a0f;
+  box-shadow: 0 16px 40px rgba(0, 212, 170, 0.35);
+}
+
+.cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(240, 244, 248, 0.75);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.cta-secondary:hover {
+  color: #ffffff;
+  border-color: rgba(0, 212, 170, 0.4);
+  transform: translateX(4px);
+}
+
+/* ---- Stats ---- */
+.hero-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  margin-top: 15px;
+  animation: fadeUp 0.9s ease 0.8s both;
 }
 
 .stat {
-    animation: floatY 4s ease-in-out infinite;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 15px;
+  color: rgba(240, 244, 248, 0.55);
 }
 
-.stat:nth-child(2) {
-    animation-delay: 1s;
+.stat strong {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent, #00d4aa);
+  line-height: 1;
 }
 
-.stat:nth-child(3) {
-    animation-delay: 2s;
+.stat-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  align-self: center;
 }
 
-.hero-info strong {
-    font-size: 2rem;
-    display: block;
-}
-
-.hero-info span {
-    font-size: 0.8rem;
-    opacity: 0.6;
-}
-
-/* ================= MANIFESTO ================= */
+/* ============================================================
+   MANIFESTO SECTION
+   ============================================================ */
 .manifesto {
-    padding: 140px 40px;
-    background: #ffffff;
-    color: #020617;
-    text-align: center;
+  padding: 160px 40px;
+  background: var(--bg, #050a0f);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.manifesto::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(0, 212, 170, 0.05) 0%, transparent 65%);
+  pointer-events: none;
 }
 
 .manifesto h2 {
-    font-size: 3.2rem;
-    animation: floatY 5s ease-in-out infinite;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  color: #ffffff;
+  position: relative;
+  z-index: 1;
 }
 
-/* ================= ANIMATIONS ================= */
+.manifesto h2 span {
+  background: linear-gradient(135deg, #00d4aa, #00e5c0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 @keyframes floatY {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-10px);
-    }
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
 }
 
-@keyframes blobFloat {
-
-    0%,
-    100% {
-        transform: translate(0, 0);
-    }
-
-    50% {
-        transform: translate(40px, -40px);
-    }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ================= RESPONSIVE ================= */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   3D FLOATING ICON CARDS — Premium Redesign
+   ============================================================ */
+
+.hero-cards-stage {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  perspective: 1200px;
+  margin-top: 24px;
+}
+
+/* ---- Ambient glow under the entire stage ---- */
+.hero-cards-stage::before {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 80px;
+  background: radial-gradient(ellipse, rgba(0, 212, 170, 0.18) 0%, transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+/* ---- Shared card base ---- */
+.hero-card {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  border-radius: 22px;
+  cursor: default;
+  animation: cardFloat 4s ease-in-out infinite;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+}
+
+.hero-card:hover {
+  transform: translateY(-8px) scale(1.04);
+  box-shadow:
+    0 0 50px rgba(0, 212, 170, 0.3),
+    0 30px 80px rgba(0, 0, 0, 0.75);
+  filter: brightness(1.12);
+}
+
+.hero-card:hover {
+  filter: brightness(1.12);
+}
+
+/* ---- Card inner surface ---- */
+.hero-card-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  /* Rich multi-stop gradient */
+  background: linear-gradient(
+    148deg,
+    #00e8c6 0%,
+    #00c4a7 28%,
+    #00987e 58%,
+    #006b58 100%
+  );
+
+  /* Layered borders + glows */
+  border: 1px solid rgba(0, 240, 200, 0.45);
+  outline: 1px solid rgba(0, 0, 0, 0.18);
+  outline-offset: -1px;
+
+  box-shadow:
+    /* ambient teal glow */
+    0 0 40px rgba(0, 212, 170, 0.22),
+    /* deep drop shadow */
+    0 28px 60px rgba(0, 0, 0, 0.65),
+    /* top specular edge */
+    inset 0 2px 1px rgba(255, 255, 255, 0.35),
+    /* left specular edge */
+    inset 2px 0 1px rgba(255, 255, 255, 0.12),
+    /* bottom inner shadow for depth */
+    inset 0 -3px 10px rgba(0, 0, 0, 0.35);
+
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---- Top-left specular corner highlight ---- */
+.hero-card-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 65%;
+  height: 52%;
+  background: radial-gradient(
+    ellipse at 25% 20%,
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(255, 255, 255, 0.06) 55%,
+    transparent 100%
+  );
+  border-radius: 22px 0 40% 0;
+  pointer-events: none;
+}
+
+/* ---- Bottom reflection strip ---- */
+.hero-card-inner::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 240, 200, 0.5),
+    transparent
+  );
+  border-radius: 0 0 22px 22px;
+}
+
+/* ---- Icon ---- */
+.hero-card-icon {
+  font-size: 34px;
+  color: #ffffff;
+  filter:
+    drop-shadow(0 0 12px rgba(0, 255, 210, 0.5))
+    drop-shadow(0 4px 14px rgba(0, 0, 0, 0.55));
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Label ---- */
+.hero-card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Left card ---- */
+.hero-card-left {
+  left: calc(50% - 170px);
+  top: 35px;
+  transform: rotate(-12deg) rotateY(22deg) scale(0.92);
+  animation-delay: 0.3s;
+}
+
+.hero-card-left .hero-card-inner {
+  box-shadow:
+    0 0 30px rgba(0, 212, 170, 0.15),
+    0 22px 55px rgba(0, 0, 0, 0.7),
+    inset 0 2px 1px rgba(255, 255, 255, 0.3),
+    inset 0 -3px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* ---- Center card — front & biggest ---- */
+.hero-card-center {
+  left: 50%;
+  top: 5px;
+  transform: translateX(-50%) scale(1.0);
+  width: 126px;
+  height: 126px;
+  z-index: 2;
+  animation-delay: 0s;
+  animation-name: cardFloatCenter;
+}
+
+.hero-card-center .hero-card-inner {
+  border-radius: 26px;
+  background: linear-gradient(
+    148deg,
+    #00f0d0 0%,
+    #00d4aa 25%,
+    #00a87f 55%,
+    #007059 100%
+  );
+  border-color: rgba(0, 255, 215, 0.55);
+  box-shadow:
+    /* strongest teal glow */
+    0 0 60px rgba(0, 212, 170, 0.35),
+    0 0 100px rgba(0, 212, 170, 0.1),
+    0 35px 80px rgba(0, 0, 0, 0.7),
+    inset 0 2px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.hero-card-center .hero-card-icon {
+  font-size: 42px;
+  filter:
+    drop-shadow(0 0 16px rgba(0, 255, 220, 0.7))
+    drop-shadow(0 5px 18px rgba(0, 0, 0, 0.5));
+}
+
+.hero-card-center .hero-card-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ---- Right card ---- */
+.hero-card-right {
+  right: calc(50% - 170px);
+  top: 35px;
+  transform: rotate(12deg) rotateY(-22deg) scale(0.92);
+  animation-delay: 0.6s;
+  animation-name: cardFloatRight;
+}
+
+/* ---- Label refinement ---- */
+.hero-card-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 0 4px rgba(0, 212, 170, 0.4);
+  position: relative;
+  z-index: 1;
+}
+
+.hero-card-right .hero-card-inner {
+  box-shadow:
+    0 0 30px rgba(0, 212, 170, 0.15),
+    0 22px 55px rgba(0, 0, 0, 0.7),
+    inset 0 2px 1px rgba(255, 255, 255, 0.3),
+    inset 0 -3px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* ---- Float animations ---- */
+@keyframes cardFloat {
+  0%, 100% { transform: rotate(-12deg) rotateY(22deg) scale(0.92) translateY(0px); }
+  50%       { transform: rotate(-12deg) rotateY(22deg) scale(0.92) translateY(-8px); }
+}
+
+@keyframes cardFloatCenter {
+  0%, 100% { transform: translateX(-50%) scale(1.0) translateY(0px); }
+  50%       { transform: translateX(-50%) scale(1.0) translateY(-11px); }
+}
+
+@keyframes cardFloatRight {
+  0%, 100% { transform: rotate(12deg) rotateY(-22deg) scale(0.92) translateY(0px); }
+  50%       { transform: rotate(12deg) rotateY(-22deg) scale(0.92) translateY(-8px); }
+}
+
+/* ---- Shimmer overlay on cards ---- */
+.hero-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+  transform: translateX(-100%);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Hide cards on smaller screens */
+@media (max-width: 600px) {
+  .hero-cards-stage { display: none; }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 @media (max-width: 900px) {
-    .hero {
-        padding: 60px 30px;
-    }
+  .hero {
+    padding: 80px 30px 80px;
+  }
 
-    .hero-frame {
-        grid-template-columns: 1fr;
-        gap: 50px;
-    }
+  .hero-cards-stage {
+    display: none;
+  }
 
-    .hero-main h1 {
-        font-size: 3.6rem;
-    }
+  .hero-headline {
+    font-size: clamp(2.5rem, 10vw, 4rem);
+    letter-spacing: -1px;
+  }
 
-    .side-strip {
-        flex-direction: row;
-        justify-content: space-between;
-    }
+  .hero-stats {
+    gap: 24px;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  .floating-msg {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-ctas {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  .cta-primary, .cta-secondary {
+    width: 100%;
+    justify-content: center;
+  }
 }

@@ -54,8 +54,12 @@ app.get("/api/debug/routes", (req, res) => {
 
 
 //MongooDB connection
-mongoose.connect(process.env.MONGO_URI, {
+const mongoUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/productsdata";
+
+mongoose.connect(mongoUri, {
   dbName: "productsdata"
+}).catch(err => {
+  console.log("❌ Error connecting to MongoDB:", err.message);
 });
 
 

@@ -1,186 +1,263 @@
-/* ===============================
-   DESIGN TOKENS (DARK UI SAFE)
-================================ */
-:root {
-    --bg-dark: #020617;
-    /* page dark */
-    --pill-dark: #0b1220;
-    /* pill surface */
+/* ============================================================
+   HEADER — PvX Dark Teal Theme
+   ============================================================ */
 
-    --border: rgba(255, 255, 255, 0.12);
-
-    /* 🔥 TEXT COLORS (VISIBLE) */
-    --text-main: #ffffff;
-    /* pure white */
-    --text-muted: #c7d2fe;
-    /* light indigo (NOT dark) */
-
-    --accent: #6366f1;
-}
-
-/* ===============================
-   HEADER WRAPPER
-================================ */
+/* ---- Sticky wrapper ---- */
 .pill-header {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-
-    background: linear-gradient(180deg,
-            #020617 0%,
-            #020617 100%);
-
-    padding: 18px 0;
-    display: flex;
-    justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 16px 0;
+  display: flex;
+  justify-content: center;
+  background: transparent;
+  /* subtle fade from bg on scroll — handled by backdrop */
 }
 
-/* ===============================
-   PILL CONTAINER
-================================ */
+/* ---- Pill container ---- */
 .pill-inner {
-    width: 94%;
-    max-width: 1200px;
+  width: 94%;
+  max-width: 1280px;
 
-    background: linear-gradient(180deg,
-            rgba(11, 18, 32, 0.98),
-            rgba(2, 6, 23, 0.98));
+  background: rgba(5, 10, 15, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 
-    border-radius: 999px;
-    border: 1px solid var(--border);
+  border-radius: var(--radius-full, 999px);
+  border: 1px solid rgba(0, 212, 170, 0.15);
 
-    padding: 14px 28px;
+  padding: 12px 24px;
 
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
 
-    box-shadow:
-        0 20px 45px rgba(0, 0, 0, 0.75),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(0, 212, 170, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  transition: border-color 0.3s ease;
 }
 
-/* ===============================
-   BRAND
-================================ */
-.pill-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.pill-inner:hover {
+  border-color: rgba(0, 212, 170, 0.25);
+}
 
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text-main) !important;
-    text-decoration: none;
+/* ---- Brand ---- */
+.pill-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff !important;
+  text-decoration: none;
+  letter-spacing: -0.3px;
 }
 
 .pill-brand svg {
-    color: var(--accent);
-    font-size: 18px;
+  color: var(--accent, #00d4aa);
+  font-size: 16px;
 }
 
-/* ===============================
-   CENTER NAV
-================================ */
+/* ---- Center nav ---- */
 .pill-nav {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-/* NAV LINKS — 🔥 FIXED */
+/* ---- Nav links ---- */
 .pill-link {
-    position: relative;
-
-    font-size: 15px;
-    font-weight: 600;
-
-    color: var(--text-muted) !important;
-    /* LIGHT, NOT DARK */
-    text-decoration: none;
-
-    transition: color 0.2s ease;
+  position: relative;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(240, 244, 248, 0.6) !important;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  transition: color 0.2s ease, background 0.2s ease;
 }
 
 .pill-link:hover {
-    color: var(--text-main) !important;
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.06);
 }
 
-/* ===============================
-   CART
-================================ */
-.pill-cart {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+/* ---- Category selector ---- */
+.pill-category-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 6px 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
 
-    font-size: 18px;
-    color: var(--text-main) !important;
+.pill-category-wrap:hover,
+.pill-category-wrap:focus-within {
+  background: rgba(0, 212, 170, 0.08);
+  border-color: rgba(0, 212, 170, 0.4);
+  box-shadow: 0 0 16px rgba(0, 212, 170, 0.15);
+}
+
+.pill-cat-icon {
+  color: var(--accent, #00d4aa);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.pill-category-select {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(240, 244, 248, 0.75);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Outfit', system-ui, sans-serif;
+}
+
+.pill-category-select option {
+  background: #0a1520;
+  color: #f0f4f8;
+  padding: 8px;
+}
+
+/* ---- Search form ---- */
+.pill-search-form {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 4px 4px 4px 16px;
+  transition: all 0.2s ease;
+}
+
+.pill-search-form:focus-within {
+  background: rgba(0, 212, 170, 0.06);
+  border-color: rgba(0, 212, 170, 0.45);
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.12);
+}
+
+.pill-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text, #f0f4f8);
+  font-size: 13px;
+  font-family: 'Outfit', system-ui, sans-serif;
+  width: 140px;
+  transition: width 0.3s ease;
+}
+
+.pill-search-input:focus {
+  width: 180px;
+}
+
+.pill-search-input::placeholder {
+  color: rgba(240, 244, 248, 0.35);
+}
+
+.pill-search-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent, #00d4aa);
+  color: #050a0f;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Outfit', system-ui, sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pill-search-button:hover {
+  background: var(--accent-light, #00e5c0);
+  transform: scale(1.04);
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.4);
+}
+
+.pill-search-button svg {
+  font-size: 13px;
+}
+
+/* ---- Cart icon ---- */
+.pill-cart {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 18px;
+  color: rgba(240, 244, 248, 0.8) !important;
+  transition: color 0.2s ease;
+}
+
+.pill-cart:hover {
+  color: var(--accent, #00d4aa) !important;
 }
 
 .pill-badge {
-    position: absolute;
-    top: -8px;
-    right: -14px;
-
-    min-width: 18px;
-    height: 18px;
-    padding: 0 6px;
-
-    background: var(--accent);
-    color: #ffffff;
-
-    font-size: 11px;
-    font-weight: 800;
-
-    border-radius: 999px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--accent, #00d4aa);
+  color: #050a0f;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* ===============================
-   LOGOUT BUTTON
-================================ */
+/* ---- Logout button ---- */
 .pill-logout {
-    padding: 9px 20px;
-    border-radius: 999px;
-
-    background: linear-gradient(135deg,
-            #4f46e5,
-            #6366f1);
-
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 700;
-
-    border: none;
-    cursor: pointer;
-
-    box-shadow: 0 10px 28px rgba(99, 102, 241, 0.55);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #00d4aa, #00a87f);
+  color: #050a0f;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Outfit', system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  box-shadow: 0 8px 24px rgba(0, 212, 170, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .pill-logout:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 16px 40px rgba(99, 102, 241, 0.75);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 36px rgba(0, 212, 170, 0.5);
 }
 
-/* ===============================
-   RESPONSIVE
-================================ */
+/* ---- Responsive ---- */
 @media (max-width: 768px) {
-    .pill-nav {
-        gap: 22px;
-    }
-
-    .pill-inner {
-        padding: 12px 20px;
-    }
-
-    .pill-brand span {
-        display: none;
-    }
+  .pill-nav {
+    gap: 4px;
+  }
+  .pill-inner {
+    padding: 10px 16px;
+  }
+  .pill-brand span {
+    display: none;
+  }
+  .pill-search-input {
+    width: 100px;
+  }
 }

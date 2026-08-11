@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCart } from "../redux/cartSlice";
+import { setCart, updateQuantity, removeFromCart } from "../redux/cartSlice";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
 import "./Cart.css";
@@ -12,36 +12,56 @@ function Cart() {
 
   useEffect(() => {
     api.get("/cart")
-      .then((res) => dispatch(setCart(res.data.cart.items)))
-      .catch(() => navigate("/login"));
-  }, []);
+      .then((res) => {
+        if (res.data?.cart?.items?.length) {
+          dispatch(setCart(res.data.cart.items));
+        }
+      })
+      .catch(() => {
+        // Keep local cart items if guest/offline
+      });
+  }, [dispatch]);
 
   const increase = async (item) => {
-    const res = await api.patch(`/cart/${item.productId}`, {
-      quantity: item.quantity + 1,
-    });
-    dispatch(setCart(res.data.cart.items));
+    const newQty = item.quantity + 1;
+    dispatch(updateQuantity({ productId: item.productId, quantity: newQty }));
+    try {
+      await api.patch(`/cart/${item.productId}`, { quantity: newQty });
+    } catch {
+      // Local state already updated
+    }
   };
 
   const decrease = async (item) => {
-    if (item.quantity <= 1) {
-      const res = await api.delete(`/cart/${item.productId}`);
-      dispatch(setCart(res.data.cart.items));
+    const newQty = item.quantity - 1;
+    if (newQty <= 0) {
+      dispatch(removeFromCart(item.productId));
+      try {
+        await api.delete(`/cart/${item.productId}`);
+      } catch {
+        // Local state updated
+      }
       return;
     }
-    const res = await api.patch(`/cart/${item.productId}`, {
-      quantity: item.quantity - 1,
-    });
-    dispatch(setCart(res.data.cart.items));
+    dispatch(updateQuantity({ productId: item.productId, quantity: newQty }));
+    try {
+      await api.patch(`/cart/${item.productId}`, { quantity: newQty });
+    } catch {
+      // Local state updated
+    }
   };
 
   const remove = async (item) => {
-    const res = await api.delete(`/cart/${item.productId}`);
-    dispatch(setCart(res.data.cart.items));
+    dispatch(removeFromCart(item.productId));
+    try {
+      await api.delete(`/cart/${item.productId}`);
+    } catch {
+      // Local state updated
+    }
   };
 
   const total = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1),
     0
   );
 
@@ -59,26 +79,39 @@ function Cart() {
         <div className="cart-grid">
           {/* LEFT */}
           <div className="cart-list">
-            {cartItems.map((item) => (
-              <div className="cart-card" key={item.productId}>
-                <img src={item.images?.[0]} alt={item.title} />
+            {cartItems.map((item) => {
+              const itemTotal = (item.price * item.quantity).toFixed(2);
+              return (
+                <div className="cart-card" key={item.productId}>
+                  <img
+                    src={item.images?.[0] || `https://picsum.photos/seed/${item.productId}/200/200`}
+                    alt={item.title}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://picsum.photos/seed/${item.productId}/200/200`;
+                    }}
+                  />
 
-                <div className="cart-info">
-                  <h3>{item.title}</h3>
-                  <span className="price">₹{item.price}</span>
+                  <div className="cart-info">
+                    <h3>{item.title}</h3>
+                    <div className="cart-price-details">
+                      <span className="unit-price">₹{item.price} each</span>
+                      <span className="item-subtotal">Item Total: ₹{itemTotal}</span>
+                    </div>
+                  </div>
+
+                  <div className="qty">
+                    <button onClick={() => decrease(item)}>−</button>
+                    <span>{item.quantity}</span>
+                    <button onClick={() => increase(item)}>+</button>
+                  </div>
+
+                  <button className="remove" onClick={() => remove(item)}>
+                    Remove
+                  </button>
                 </div>
-
-                <div className="qty">
-                  <button onClick={() => decrease(item)}>−</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => increase(item)}>+</button>
-                </div>
-
-                <button className="remove" onClick={() => remove(item)}>
-                  Remove
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* RIGHT */}
@@ -86,14 +119,14 @@ function Cart() {
             <h2>Order Summary</h2>
 
             <div className="row">
-              <span>Subtotal</span>
+              <span>Subtotal ({cartItems.reduce((acc, i) => acc + i.quantity, 0)} items)</span>
               <span className="amount">₹{total.toFixed(2)}</span>
             </div>
 
             <div className="divider" />
 
             <div className="total">
-              <span>Total</span>
+              <span>Total Amount</span>
               <strong>₹{total.toFixed(2)}</strong>
             </div>
 
@@ -101,7 +134,7 @@ function Cart() {
               className="checkout"
               onClick={() => navigate("/checkout")}
             >
-              Proceed to Checkout →
+              Proceed to Payment 💳
             </button>
           </aside>
         </div>
