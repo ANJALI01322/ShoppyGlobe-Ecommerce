@@ -4,7 +4,7 @@ import { BiCategoryAlt, BiFilterAlt } from "react-icons/bi";
 import { FaCartPlus } from "react-icons/fa";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setCart } from "../redux/cartSlice";
+import { setCart, addToCart } from "../redux/cartSlice";
 import { electronicsProducts } from "../data/electronicsData";
 import { clothesProducts } from "../data/clothesData";
 import { shoesProducts } from "../data/shoesData";
