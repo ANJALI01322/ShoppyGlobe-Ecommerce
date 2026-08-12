@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom"
+import { Route, Routes, useLocation } from "react-router-dom"
 import Home from "./components/Home"
 import Header from "./Features/Header"
 import Notfound from "./components/Notfound"
@@ -9,30 +9,36 @@ import Checkout from "./components/Checkout"
 import Login from "./components/login.jsx";      
 import Register from "./components/Register.jsx";
 import ProtectedRoute from "./components/ProtectedRoute"
-
-
+import Wishlist from "./components/Wishlist"
+import Profile from "./components/Profile"
+import Address from "./components/Address"
+import Orders from "./components/Orders"
 
 function App() {
+  const location = useLocation();
+  const hideHeaderRoutes = ["/login", "/register"];
+  const shouldHideHeader = hideHeaderRoutes.includes(location.pathname.toLowerCase());
 
   return (
     <>
-    <Header/>
-    <Routes>
-      <Route path="/" element={<Home/>}></Route>
-      <Route path="/productlist" element={<ProductList />} />
-      <Route path="/productdetail/:productId" element={<Productdetail />} />
-      
-      <Route path="/checkout" element={<Checkout/>}></Route>
-      <Route path="*" element={<Notfound/>}></Route>
-      <Route path="/login" element={<Login/>} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/cart" element={<Cart />} />
-</Routes>
-
-
- 
-  </>
-  )
+      {!shouldHideHeader && <Header />}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/productlist" element={<ProductList />} />
+        <Route path="/productdetail/:productId" element={<Productdetail />} />
+        
+        <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+        <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+        <Route path="/address" element={<ProtectedRoute><Address /></ProtectedRoute>} />
+        <Route path="*" element={<Notfound />} />
+      </Routes>
+    </>
+  );
 }
 
-export default App
+export default App;

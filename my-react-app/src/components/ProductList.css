@@ -209,6 +209,36 @@
   z-index: 2;
 }
 
+.lux-card-heart-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(5, 10, 15, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lux-card-heart-btn:hover {
+  transform: scale(1.15);
+  background: rgba(255, 77, 109, 0.25);
+  border-color: rgba(255, 77, 109, 0.6);
+}
+
+.lux-card-heart-btn.active {
+  background: rgba(255, 77, 109, 0.25);
+  border-color: #ff4d6d;
+}
+
 .lux-empty-wrap {
   text-align: center;
   padding: 60px 20px;
@@ -226,6 +256,7 @@
   object-fit: contain;
   background: transparent;
   border-radius: 16px;
+  cursor: pointer;
   transition: transform 0.3s ease;
 }
 
@@ -318,6 +349,54 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+/* ---- Quantity Control Bar for Added Items ---- */
+.lux-qty-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 212, 170, 0.12);
+  border: 1px solid rgba(0, 212, 170, 0.35);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.lux-qty-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: #00d4aa;
+  color: #050a0f;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.lux-qty-btn:hover:not(:disabled) {
+  transform: scale(1.15);
+  background: #00e5c0;
+  box-shadow: 0 0 12px rgba(0, 212, 170, 0.5);
+}
+
+.lux-qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.lux-qty-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: #00d4aa;
+  min-width: 18px;
+  text-align: center;
 }
 
 /* ---- Responsive ---- */

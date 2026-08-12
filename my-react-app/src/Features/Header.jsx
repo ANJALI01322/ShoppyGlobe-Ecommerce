@@ -14,6 +14,7 @@ function Header() {
   const [searchParams] = useSearchParams();
   
   const [loggedIn, setLoggedIn] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -102,19 +103,80 @@ function Header() {
         </div>
 
         {/* RIGHT */}
-        {loggedIn && (
-          <button className="pill-logout" onClick={handleLogout}>
-            Logout
-          </button>
-        )}
-        <Link to="/cart" className="pill-link pill-cart" title="Shopping Cart">
-          <FaCartPlus />
-          {cartItems.length > 0 && (
-            <span className="pill-badge">
-              {cartItems.reduce((acc, i) => acc + Number(i.quantity || 1), 0)}
-            </span>
+        <div className="pill-right">
+          <Link to="/cart" className="pill-link pill-cart" title="Shopping Cart">
+            <FaCartPlus />
+            {cartItems.length > 0 && (
+              <span className="pill-badge">
+                {cartItems.reduce((acc, i) => acc + Number(i.quantity || 1), 0)}
+              </span>
+            )}
+          </Link>
+          {loggedIn ? (
+            <div 
+              className="pill-account-dropdown"
+              onMouseEnter={() => setShowAccountMenu(true)}
+              onMouseLeave={() => setShowAccountMenu(false)}
+            >
+              <Link 
+                to="/profile"
+                className="pill-account-btn" 
+                onClick={() => setShowAccountMenu(false)}
+                style={{ textDecoration: 'none' }}
+              >
+                <span>Account</span>
+                <span className="pill-dropdown-arrow">▼</span>
+              </Link>
+
+              {showAccountMenu && (
+                <div className="pill-account-menu">
+                  <Link 
+                    to="/profile" 
+                    className="pill-menu-item"
+                    onClick={() => setShowAccountMenu(false)}
+                  >
+                    👤 Profile
+                  </Link>
+                  <Link 
+                    to="/orders" 
+                    className="pill-menu-item"
+                    onClick={() => setShowAccountMenu(false)}
+                  >
+                    📦 Orders
+                  </Link>
+                  <Link 
+                    to="/wishlist" 
+                    className="pill-menu-item"
+                    onClick={() => setShowAccountMenu(false)}
+                  >
+                    ❤️ Wishlist
+                  </Link>
+                  <Link 
+                    to="/address" 
+                    className="pill-menu-item"
+                    onClick={() => setShowAccountMenu(false)}
+                  >
+                    📍 Address
+                  </Link>
+                  <div className="pill-menu-divider"></div>
+                  <button 
+                    className="pill-menu-item pill-menu-logout"
+                    onClick={() => {
+                      setShowAccountMenu(false);
+                      handleLogout();
+                    }}
+                  >
+                    🚪 Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className="pill-logout" style={{ textDecoration: 'none' }}>
+              Login
+            </Link>
           )}
-        </Link>
+        </div>
       </div>
     </header>
   );

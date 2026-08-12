@@ -66,3 +66,96 @@ button {
 input, textarea, select {
   font-family: 'Outfit', system-ui, sans-serif;
 }
+
+/* ============================================================
+   TOAST POPUP BANNER (Added to Cart)
+   ============================================================ */
+.toast-popup-banner {
+  position: fixed;
+  top: 100px;
+  right: 28px;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(7, 13, 20, 0.95);
+  border: 1px solid rgba(0, 212, 170, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 18px;
+  padding: 14px 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 212, 170, 0.2);
+  min-width: 320px;
+  max-width: 440px;
+  animation: slideInToast 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideInToast {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toast-check {
+  font-size: 18px;
+}
+
+.toast-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px;
+}
+
+.toast-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.toast-info strong {
+  font-size: 14px;
+  color: #00d4aa;
+  font-weight: 800;
+}
+
+.toast-prod-title {
+  font-size: 12px;
+  color: rgba(240, 244, 248, 0.7);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 180px;
+}
+
+.toast-view-cart-btn {
+  background: linear-gradient(135deg, #00d4aa, #00a87f);
+  color: #050a0f;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.toast-view-cart-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 212, 170, 0.4);
+}

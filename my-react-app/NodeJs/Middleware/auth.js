@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import auth from "../Model/auth.model.js";
+import mongoose from "mongoose";
+import { memoryUsers } from "../Controller/auth.controller.js";
 
 export default async function authMiddleware(req, res, next) {
   try {
@@ -9,24 +11,45 @@ export default async function authMiddleware(req, res, next) {
       return res.status(401).json({ message: "No token" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const jwtSecret = process.env.JWT_SECRET || "your_jwt_secret_key";
+    const decoded = jwt.verify(token, jwtSecret);
 
-    // 🔥 FETCH FULL USER
-    const user = await auth.findById(decoded.id).select("-password");
+    // decoded.id = user._id (string), decoded.email = user email
+    let user = null;
 
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
+    if (mongoose.connection.readyState === 1) {
+      // Look up by email if available in token, else by _id as string
+      if (decoded.email) {
+        user = await auth.findOne({ email: decoded.email }).select("-password").lean();
+      } else {
+        // Try direct string match on _id
+        try {
+          user = await auth.findOne({ _id: decoded.id }).select("-password").lean();
+        } catch (castErr) {
+          user = null;
+        }
+      }
+    } else {
+      user = memoryUsers.get(decoded.id) || memoryUsers.get(decoded.email);
     }
 
-    // 🔥 THIS FIXES EVERYTHING
-    req.user = user;
+    if (!user) {
+      // If still not found but token is valid, create a minimal user object from token
+      if (decoded.id && decoded.email) {
+        user = { _id: decoded.id, email: decoded.email };
+      } else {
+        return res.status(401).json({ message: "User not found" });
+      }
+    }
 
+    req.user = user;
     next();
   } catch (err) {
     console.error("AUTH ERROR:", err);
     return res.status(401).json({ message: "Invalid token" });
   }
 }
+
 
 
 

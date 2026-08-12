@@ -33,18 +33,21 @@ const handleSubmit = async (e) => {
     setTimeout(() => navigate("/login"), 900);
 
   } catch (error) {
-    if (error.response?.status === 409) {
+    const errorMsg = error.response?.data?.message || "Something went wrong. Try again.";
+    if (error.response?.status === 409 || error.response?.status === 400) {
       setMessage({
-        text: "User already exists. Redirecting to login...",
+        text: errorMsg,
         type: "error",
       });
-      setTimeout(
-        () => navigate("/login", { state: { email: userData.email } }),
-        900
-      );
+      if (errorMsg.toLowerCase().includes("exist")) {
+        setTimeout(
+          () => navigate("/login", { state: { email: userData.email } }),
+          1200
+        );
+      }
     } else {
       setMessage({
-        text: "Something went wrong. Try again.",
+        text: errorMsg,
         type: "error",
       });
     }

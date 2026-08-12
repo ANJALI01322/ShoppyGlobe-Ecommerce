@@ -33,6 +33,7 @@ const cartSlice = createSlice({
         state.items.push({
           productId: id,
           title: product.title,
+          color: product.color || null,
           price: Number(product.price),
           images: product.images || [product.image],
           quantity: Number(action.payload.quantity || 1),
@@ -75,6 +76,11 @@ const cartSlice = createSlice({
           typeof i.productId === "object"
             ? i.productId.title
             : i.title,
+
+        color:
+          typeof i.productId === "object"
+            ? (i.productId.color || i.color || null)
+            : (i.color || null),
 
         price:
           typeof i.productId === "object"

@@ -1,0 +1,314 @@
+.address-page {
+  min-height: 100vh;
+  padding: 20px 6% 80px;
+  background: var(--bg, #050a0f);
+  font-family: 'Outfit', system-ui, sans-serif;
+  color: #ffffff;
+}
+
+.address-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.address-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  color: rgba(240, 244, 248, 0.5);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.address-back-btn:hover {
+  color: var(--accent, #00d4aa);
+}
+
+.address-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.address-header h1 {
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.address-header p {
+  color: rgba(240, 244, 248, 0.5);
+  font-size: 14px;
+}
+
+.add-address-btn {
+  background: linear-gradient(135deg, #00d4aa, #00a87f);
+  color: #050a0f;
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-family: 'Outfit', system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 212, 170, 0.35);
+  transition: all 0.2s ease;
+}
+
+.add-address-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(0, 212, 170, 0.5);
+}
+
+.address-empty {
+  text-align: center;
+  padding: 80px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+}
+
+.address-empty .empty-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+}
+
+.address-empty h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.address-empty p {
+  color: rgba(240, 244, 248, 0.5);
+  margin-bottom: 24px;
+}
+
+.address-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.address-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+}
+
+.address-card.default-card {
+  border-color: rgba(0, 212, 170, 0.4);
+  background: rgba(0, 212, 170, 0.04);
+  box-shadow: 0 12px 32px rgba(0, 212, 170, 0.1);
+}
+
+.default-badge {
+  display: inline-block;
+  align-self: flex-start;
+  background: rgba(0, 212, 170, 0.15);
+  color: #00d4aa;
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+.address-card-body h3 {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.addr-phone {
+  font-size: 13px;
+  color: rgba(240, 244, 248, 0.6);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.addr-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(240, 244, 248, 0.85);
+  margin-bottom: 20px;
+}
+
+.address-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.action-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Outfit', system-ui, sans-serif;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.action-btn.make-default {
+  background: rgba(0, 212, 170, 0.1);
+  color: #00d4aa;
+  border: 1px solid rgba(0, 212, 170, 0.25);
+}
+
+.action-btn.make-default:hover {
+  background: #00d4aa;
+  color: #050a0f;
+}
+
+.action-btn.edit {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.action-btn.edit:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.action-btn.delete {
+  background: rgba(255, 77, 109, 0.1);
+  color: #ff4d6d;
+}
+
+.action-btn.delete:hover {
+  background: #ff4d6d;
+  color: #ffffff;
+}
+
+/* ---- Inline Expandable Form Card ---- */
+.address-inline-form-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  border-radius: 24px;
+  padding: 28px 32px;
+  margin-bottom: 36px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 212, 170, 0.1);
+  animation: fadeIn 0.3s ease;
+}
+
+.address-inline-form-card h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: #00d4aa;
+}
+
+.modal-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.modal-form-group label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: rgba(240, 244, 248, 0.6);
+}
+
+.modal-form-group input,
+.modal-form-group textarea {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #ffffff;
+  font-size: 14px;
+  font-family: 'Outfit', system-ui, sans-serif;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.modal-form-group input:focus,
+.modal-form-group textarea:focus {
+  border-color: #00d4aa;
+  background: rgba(0, 212, 170, 0.05);
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.modal-checkbox-group {
+  margin: 16px 0 20px;
+}
+
+.modal-checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(240, 244, 248, 0.85);
+  cursor: pointer;
+}
+
+.inline-form-actions {
+  display: flex;
+  gap: 14px;
+}
+
+.modal-save-btn {
+  background: linear-gradient(135deg, #00d4aa, #00a87f);
+  color: #050a0f;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-family: 'Outfit', system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 212, 170, 0.3);
+  transition: all 0.2s ease;
+}
+
+.modal-save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 212, 170, 0.45);
+}
+
+.modal-cancel-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-family: 'Outfit', system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}

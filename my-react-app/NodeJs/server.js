@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import cartRoutes from "./Routes/cart.route.js";
 import productRoutes from "./Routes/products.route.js";
 import authRoutes from "./Routes/auth.route.js";
+import paymentRoutes from "./Routes/payment.route.js";
+import orderRoutes from "./Routes/order.route.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -14,18 +16,18 @@ app.use(express.json())
 app.use(cookieParser());
 
 app.use(cors({
-origin: [
-      "http://localhost:5174", // local dev
-      "https://ecommerce-website-8vod.vercel.app" // Vercel frontend
-    ],
-  
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    return callback(null, origin);
+  },
   credentials: true
 }));
 
-;
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/payment", paymentRoutes);
+app.use("/api/orders", orderRoutes);
 
 
 app.get("/api/debug/routes", (req, res) => {
@@ -53,28 +55,37 @@ app.get("/api/debug/routes", (req, res) => {
 });
 
 
-//MongooDB connection
-const mongoUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/productsdata";
+import { seedProducts } from "./seedData.js";
 
-mongoose.connect(mongoUri, {
-  dbName: "productsdata"
-}).catch(err => {
-  console.log("❌ Error connecting to MongoDB:", err.message);
-});
+// MongoDB connection
+async function connectDB() {
+  const defaultUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/productsdata";
+  try {
+    await mongoose.connect(defaultUri, { dbName: "productsdata", serverSelectionTimeoutMS: 2000 });
+    console.log("✅ MongoDB Connected to Local Server");
+  } catch {
+    console.log("⚠️ Local MongoDB not running. Starting Embedded MongoDB Server...");
+    try {
+      const { MongoMemoryServer } = await import("mongodb-memory-server");
+      const mongoServer = await MongoMemoryServer.create();
+      const mongoUri = mongoServer.getUri();
+      await mongoose.connect(mongoUri, { dbName: "productsdata" });
+      console.log("✅ Embedded MongoDB Server Online at:", mongoUri);
+    } catch (e) {
+      console.error("❌ Error starting embedded MongoDB:", e.message);
+    }
+  }
+}
 
+connectDB();
 
 mongoose.connection.once("open", async () => {
-  console.log("✅ Database connected");
-  console.log("👉 DB Name:", mongoose.connection.name);
-
-  const collections = await mongoose.connection.db
-    .listCollections()
-    .toArray();
-
-  console.log(
-    "👉 Collections:",
-    collections.map(c => c.name)
-  );
+  console.log("✅ Database Connected & Ready. DB Name:", mongoose.connection.name);
+  try {
+    await seedProducts();
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    console.log("👉 MongoDB Collections:", collections.map(c => c.name));
+  } catch {}
 });
 
 mongoose.connection.on("error", () => {

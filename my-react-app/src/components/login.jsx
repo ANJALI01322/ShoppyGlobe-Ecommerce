@@ -12,27 +12,36 @@ export default function Login() {
 
  // ✅ use central axios instance
 
-const submit = async (e) => {
-  e.preventDefault();
-  setMsg("");
+  const submit = async (e) => {
+    e.preventDefault();
+    setMsg("");
 
-  try {
-    // ✅ FIXED: use api.js instead of localhost fetch
-    await api.post("/auth/login", {
-      email,
-      password,
-    });
+    try {
+      const res = await api.post("/auth/login", {
+        email,
+        password,
+      });
 
-    setMsg("Login successful!");
-    navigate("/cart"); // or /productlist if you prefer
+      setMsg("Login successful!");
 
-  } catch (err) {
-    console.error("LOGIN ERROR:", err);
-    setMsg(
-      err.response?.data?.message || "Login failed"
-    );
-  }
-};
+      // Save user session in localStorage
+      if (res.data?.user) {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        localStorage.setItem("isLoggedIn", "true");
+      }
+
+      // Smooth redirect to Home page
+      setTimeout(() => {
+        navigate("/");
+      }, 400);
+
+    } catch (err) {
+      console.error("LOGIN ERROR:", err);
+      setMsg(
+        err.response?.data?.message || "Login failed. Please try again."
+      );
+    }
+  };
 
   function goBack(e) {
     e.preventDefault();

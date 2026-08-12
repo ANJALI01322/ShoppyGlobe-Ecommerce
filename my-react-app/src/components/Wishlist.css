@@ -1,0 +1,208 @@
+.wishlist-page {
+  min-height: 100vh;
+  padding: 20px 6% 80px;
+  background: var(--bg, #050a0f);
+  font-family: 'Outfit', system-ui, sans-serif;
+  color: #ffffff;
+}
+
+.wishlist-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.wishlist-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  color: rgba(240, 244, 248, 0.5);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.wishlist-back-btn:hover {
+  color: var(--accent, #00d4aa);
+}
+
+.wishlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 36px;
+}
+
+.wishlist-header h1 {
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+
+.wishlist-clear-btn {
+  background: rgba(255, 77, 109, 0.1);
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  color: #ff4d6d;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wishlist-clear-btn:hover {
+  background: #ff4d6d;
+  color: #ffffff;
+}
+
+.wishlist-empty {
+  text-align: center;
+  padding: 80px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+}
+
+.empty-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+}
+
+.wishlist-empty h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.wishlist-empty p {
+  color: rgba(240, 244, 248, 0.5);
+  margin-bottom: 24px;
+}
+
+.wishlist-shop-btn {
+  display: inline-block;
+  background: linear-gradient(135deg, #00d4aa, #00a87f);
+  color: #050a0f;
+  padding: 12px 28px;
+  border-radius: 999px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wishlist-shop-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 212, 170, 0.4);
+}
+
+.wishlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.wishlist-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.wishlist-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 212, 170, 0.3);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.wishlist-remove-card-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.wishlist-remove-card-btn:hover {
+  background: #ff4d6d;
+  border-color: #ff4d6d;
+}
+
+.wishlist-media {
+  width: 100%;
+  height: 180px;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.wishlist-media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.wishlist-details {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.wishlist-details h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.wishlist-price-row {
+  margin-bottom: 16px;
+}
+
+.wishlist-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: #00d4aa;
+}
+
+.wishlist-add-cart-btn {
+  margin-top: auto;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #00d4aa, #00a87f);
+  color: #050a0f;
+  font-weight: 800;
+  font-family: 'Outfit', system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wishlist-add-cart-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0, 212, 170, 0.35);
+}
