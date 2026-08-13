@@ -1,93 +1,490 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { GoSearch } from "react-icons/go";
+import React, { useEffect, useMemo, useState } from "react";
 import { BiCategoryAlt, BiFilterAlt } from "react-icons/bi";
-import { FaCartPlus } from "react-icons/fa";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  FaCartPlus,
+  FaInstagram,
+  FaFacebookF,
+  FaTwitter,
+} from "react-icons/fa";
+import { FiArrowRight, FiCheck } from "react-icons/fi";
+
+import {
+  useNavigate,
+  useSearchParams,
+  Link,
+} from "react-router-dom";
+
 import { useSelector, useDispatch } from "react-redux";
-import { setCart, addToCart, updateQuantity, removeFromCart } from "../redux/cartSlice";
-import { addToWishlist, removeFromWishlist } from "../redux/wishlistSlice";
+
+import {
+  addToCart,
+  updateQuantity,
+  removeFromCart,
+} from "../redux/cartSlice";
+
+import {
+  addToWishlist,
+  removeFromWishlist,
+} from "../redux/wishlistSlice";
+
 import { electronicsProducts } from "../data/electronicsData";
 import { clothesProducts } from "../data/clothesData";
 import { shoesProducts } from "../data/shoesData";
 import { sportsProducts } from "../data/sportsData";
+
 import api from "../api";
+
 import "./ProductList.css";
 
-const ALLOWED_CATEGORIES = ["electronics", "clothes", "sports", "shoes"];
-const staticDatasets = [...electronicsProducts, ...clothesProducts, ...shoesProducts, ...sportsProducts];
+/* =========================================================
+   CATEGORIES
+========================================================= */
 
-// Helper to determine product category
-function getProductCategory(p) {
-  if (p.category && ALLOWED_CATEGORIES.includes(p.category.toLowerCase())) {
-    return p.category.toLowerCase();
-  }
-  const text = `${p.title || ""} ${p.description || ""}`.toLowerCase();
-  if (text.includes("shoe") || text.includes("sneaker") || text.includes("boot") || text.includes("footwear")) return "shoes";
-  if (text.includes("sport") || text.includes("ball") || text.includes("fitness") || text.includes("gym")) return "sports";
-  if (text.includes("shirt") || text.includes("cloth") || text.includes("wear") || text.includes("dress") || text.includes("pant") || text.includes("jacket") || text.includes("powder") || text.includes("beauty") || text.includes("lipstick")) return "clothes";
-  return "electronics";
-}
+const ALLOWED_CATEGORIES = [
+  "electronics",
+  "clothes",
+  "sports",
+  "shoes",
+  "new",
+];
 
-function ProductList() {
-  const cartItems = useSelector((state) => state.cart.items);
-  const wishlistItems = useSelector((state) => state.wishlist?.items || []);
-  const [data, setData] = useState(staticDatasets);
-  const [filtered, setFiltered] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchParams, setSearchParams] = useSearchParams();
+/* =========================================================
+   STATIC PRODUCTS
+========================================================= */
 
-  const initialQuery = searchParams.get("search") || "";
-  const initialCategory = searchParams.get("category") || "all";
+const staticDatasets = [
+  ...electronicsProducts,
+  ...clothesProducts,
+  ...shoesProducts,
+  ...sportsProducts,
+];
 
-  const [searchTerm, setSearchTerm] = useState(initialQuery);
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+/* =========================================================
+   CATEGORY HELPER
+========================================================= */
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [addingId, setAddingId] = useState(null);
-  const [toast, setToast] = useState({ show: false, title: "", img: "", type: "cart" });
+function getProductCategory(product) {
+  /*
+   * First priority:
+   * Use the actual category from product data.
+   */
+  if (product?.category) {
+    const category = String(product.category)
+      .trim()
+      .toLowerCase();
 
-  async function handleToggleWishlist(e, product) {
-    e.stopPropagation();
-    try {
-      await api.get("/auth/me");
-      const isWishlisted = wishlistItems.some((i) => String(i.productId || i._id) === String(product._id));
-      if (isWishlisted) {
-        dispatch(removeFromWishlist(product._id));
-        setToast({
-          show: true,
-          title: product.title,
-          img: product.images?.[0] || "",
-          type: "wishlist-remove"
-        });
-      } else {
-        dispatch(addToWishlist(product));
-        setToast({
-          show: true,
-          title: product.title,
-          img: product.images?.[0] || "",
-          type: "wishlist"
-        });
-      }
-      setTimeout(() => {
-        setToast((prev) => ({ ...prev, show: false }));
-      }, 3500);
-    } catch {
-      navigate("/login");
+    /*
+     * Direct category values
+     */
+    if (ALLOWED_CATEGORIES.includes(category)) {
+      return category;
+    }
+
+    /*
+     * Handle common alternate names.
+     */
+    if (
+      category === "fashion" ||
+      category === "clothing" ||
+      category === "clothes" ||
+      category === "apparel"
+    ) {
+      return "clothes";
+    }
+
+    if (
+      category === "electronic" ||
+      category === "electronics"
+    ) {
+      return "electronics";
+    }
+
+    if (
+      category === "shoe" ||
+      category === "shoes" ||
+      category === "footwear"
+    ) {
+      return "shoes";
+    }
+
+    if (
+      category === "sport" ||
+      category === "sports" ||
+      category === "fitness"
+    ) {
+      return "sports";
     }
   }
 
-  async function handleAddToCart(e, product) {
-    e.stopPropagation(); // Card click navigation prevent
+  /*
+   * Fallback:
+   * Detect category from title + description.
+   */
+  const text = `
+    ${product?.title || ""}
+    ${product?.description || ""}
+  `.toLowerCase();
+
+  /*
+   * Shoes / footwear
+   */
+  if (
+    text.includes("shoe") ||
+    text.includes("sneaker") ||
+    text.includes("boot") ||
+    text.includes("footwear") ||
+    text.includes("sandal") ||
+    text.includes("slipper") ||
+    text.includes("loafer")
+  ) {
+    return "shoes";
+  }
+
+  /*
+   * Sports
+   */
+  if (
+    text.includes("sport") ||
+    text.includes("football") ||
+    text.includes("basketball") ||
+    text.includes("cricket") ||
+    text.includes("tennis") ||
+    text.includes("ball") ||
+    text.includes("fitness") ||
+    text.includes("gym") ||
+    text.includes("yoga") ||
+    text.includes("exercise")
+  ) {
+    return "sports";
+  }
+
+  /*
+   * Clothes / fashion
+   */
+  if (
+    text.includes("shirt") ||
+    text.includes("cloth") ||
+    text.includes("wear") ||
+    text.includes("dress") ||
+    text.includes("pant") ||
+    text.includes("jean") ||
+    text.includes("jacket") ||
+    text.includes("hoodie") ||
+    text.includes("t-shirt") ||
+    text.includes("tshirt") ||
+    text.includes("sweater") ||
+    text.includes("fashion") ||
+    text.includes("apparel")
+  ) {
+    return "clothes";
+  }
+
+  /*
+   * Electronics
+   *
+   * Keep electronics as the final fallback because
+   * most remaining products in the current dataset
+   * are electronics.
+   */
+  return "electronics";
+}
+
+/* =========================================================
+   COMPONENT
+========================================================= */
+
+function ProductList() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const cartItems = useSelector(
+    (state) => state.cart?.items || []
+  );
+
+  const wishlistItems = useSelector(
+    (state) => state.wishlist?.items || []
+  );
+
+  const [searchParams, setSearchParams] =
+    useSearchParams();
+
+  const [data, setData] =
+    useState(staticDatasets);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [addingId, setAddingId] =
+    useState(null);
+
+  const [toast, setToast] = useState({
+    show: false,
+    title: "",
+    img: "",
+    type: "cart",
+  });
+
+  /*
+   * Read category from URL.
+   *
+   * Example:
+   * /productlist?category=shoes
+   */
+  const selectedCategory = (
+    searchParams.get("category") || "all"
+  )
+    .trim()
+    .toLowerCase();
+
+  /*
+   * Read search from URL.
+   */
+  const searchQuery =
+    searchParams.get("search") || "";
+
+  const sortBy = searchParams.get("sort") || "default";
+
+  /* =======================================================
+     CATEGORIES
+  ======================================================= */
+
+  const availableCategories = useMemo(
+    () => ["all", ...ALLOWED_CATEGORIES],
+    []
+  );
+
+  /* =======================================================
+     FETCH PRODUCTS
+  ======================================================= */
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchProducts = async () => {
+      try {
+        const response = await api.get("/products");
+
+        if (
+          mounted &&
+          Array.isArray(response.data) &&
+          response.data.length > 0
+        ) {
+          const existingIds = new Set(
+            response.data.map(
+              (item) => item._id
+            )
+          );
+
+          const extraStatic =
+            staticDatasets.filter(
+              (item) =>
+                !existingIds.has(item._id)
+            );
+
+          setData([
+            ...response.data,
+            ...extraStatic,
+          ]);
+        } else if (mounted) {
+          setData(staticDatasets);
+        }
+      } catch (error) {
+        console.error(
+          "Using fallback static products dataset:",
+          error
+        );
+
+        if (mounted) {
+          setData(staticDatasets);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProducts();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  /* =======================================================
+     FILTER & SORT PRODUCTS
+  ======================================================= */
+
+  const filtered = useMemo(() => {
+    const category = selectedCategory || "all";
+    const query = searchQuery.trim().toLowerCase();
+
+    let list = data.filter((product) => {
+      const productCategory = getProductCategory(product);
+
+      const matchesCategory =
+        category === "all" ||
+        category === "new" ||
+        category === "newest" ||
+        productCategory === category;
+
+      const searchableText = `
+        ${product?.title || ""}
+        ${product?.description || ""}
+        ${productCategory}
+      `.toLowerCase();
+
+      const matchesSearch =
+        !query || searchableText.includes(query);
+
+      return matchesCategory && matchesSearch;
+    });
+
+    if (category === "new" || category === "newest") {
+      list = list.slice(0, 16);
+    }
+
+    if (sortBy === "price-low") {
+      list = [...list].sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (sortBy === "price-high") {
+      list = [...list].sort((a, b) => Number(b.price) - Number(a.price));
+    } else if (sortBy === "rating") {
+      list = [...list].sort((a, b) => Number(b.rating || 4.5) - Number(a.rating || 4.5));
+    } else if (sortBy === "newest") {
+      list = [...list].reverse();
+    }
+
+    return list;
+  }, [
+    data,
+    selectedCategory,
+    searchQuery,
+    sortBy,
+  ]);
+
+  /* =======================================================
+     CATEGORY & SORT HANDLERS
+  ======================================================= */
+
+  const handleCategoryClick = (category) => {
+    const normalizedCategory = String(category).toLowerCase();
+    const currentSort = searchParams.get("sort");
+
+    const params = {};
+    if (normalizedCategory !== "all") {
+      params.category = normalizedCategory;
+    }
+    if (searchQuery) {
+      params.search = searchQuery;
+    }
+    if (currentSort) {
+      params.sort = currentSort;
+    }
+
+    setSearchParams(params);
+  };
+
+  const handleSortChange = (e) => {
+    const newSort = e.target.value;
+    const params = {};
+    if (selectedCategory && selectedCategory !== "all") {
+      params.category = selectedCategory;
+    }
+    if (searchQuery) {
+      params.search = searchQuery;
+    }
+    if (newSort !== "default") {
+      params.sort = newSort;
+    }
+    setSearchParams(params);
+  };
+
+  /* =======================================================
+     DETAIL
+  ======================================================= */
+
+  const handleDetail = (id) => {
+    navigate(`/productdetail/${id}`);
+  };
+
+  /* =======================================================
+     TOAST
+  ======================================================= */
+
+  const showToast = (
+    title,
+    img,
+    type
+  ) => {
+    setToast({
+      show: true,
+      title,
+      img,
+      type,
+    });
+
+    setTimeout(() => {
+      setToast((previous) => ({
+        ...previous,
+        show: false,
+      }));
+    }, 3200);
+  };
+
+  /* =======================================================
+     WISHLIST
+  ======================================================= */
+
+  const handleToggleWishlist = (event, product) => {
+    event.stopPropagation();
+
+    const isWishlisted = wishlistItems.some(
+      (item) =>
+        String(item.productId || item._id) === String(product._id)
+    );
+
+    if (isWishlisted) {
+      dispatch(removeFromWishlist(product._id));
+      showToast(
+        product.title,
+        product.images?.[0] || "",
+        "wishlist-remove"
+      );
+    } else {
+      dispatch(addToWishlist(product));
+      showToast(
+        product.title,
+        product.images?.[0] || "",
+        "wishlist"
+      );
+    }
+  };
+
+  /* =======================================================
+     ADD TO CART
+  ======================================================= */
+
+  const handleAddToCart = async (event, product) => {
+    event.stopPropagation();
+
     if (addingId) return;
+
     try {
       setAddingId(product._id);
-      
-      // 🔒 1. Check if user is logged in
-      await api.get("/auth/me");
 
-      // 2. If logged in, add to cart
-      dispatch(addToCart({ ...product, quantity: 1 }));
+      dispatch(
+        addToCart({
+          ...product,
+          quantity: 1,
+        })
+      );
+
+      showToast(
+        product.title,
+        product.images?.[0] || "",
+        "cart"
+      );
+
       try {
         await api.post("/cart/add", {
           productId: product._id,
@@ -96,309 +493,863 @@ function ProductList() {
           images: product.images,
           quantity: 1,
         });
-      } catch {
-        // API fallback
+      } catch (err) {
+        /*
+         * Redux cart remains functional for guest users.
+         */
       }
-
-      // ✨ Show Pop-up notification instead of navigating
-      setToast({
-        show: true,
-        title: product.title,
-        img: product.images?.[0] || "",
-        type: "cart"
-      });
-
-      setTimeout(() => {
-        setToast((prev) => ({ ...prev, show: false }));
-      }, 3500);
-
-    } catch (err) {
-      // 🔒 Not logged in -> redirect to login page
-      navigate("/login");
     } finally {
       setAddingId(null);
     }
-  }
+  };
 
-  async function handleIncreaseQty(e, product, currentQty) {
-    e.stopPropagation();
-    const newQty = currentQty + 1;
-    dispatch(updateQuantity({ productId: product._id, quantity: newQty }));
-    try {
-      await api.patch(`/cart/${product._id}`, { quantity: newQty });
-    } catch {}
-  }
+  /* =======================================================
+     INCREASE
+  ======================================================= */
 
-  async function handleDecreaseQty(e, product, currentQty) {
-    e.stopPropagation();
-    if (currentQty <= 1) {
-      // Remove from cart when decreased from 1
-      dispatch(removeFromCart(product._id));
-      try {
-        await api.delete(`/cart/${product._id}`);
-      } catch {}
-      return;
-    }
-    const newQty = currentQty - 1;
-    dispatch(updateQuantity({ productId: product._id, quantity: newQty }));
-    try {
-      await api.patch(`/cart/${product._id}`, { quantity: newQty });
-    } catch {}
-  }
+  const handleIncreaseQty = async (
+    event,
+    product,
+    currentQty
+  ) => {
+    event.stopPropagation();
 
-  function handleDetail(id) {
-    navigate(`/productdetail/${id}`);
-  }
+    const newQty =
+      Number(currentQty) + 1;
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await api.get("/products");
-        if (Array.isArray(res.data) && res.data.length > 0) {
-          const existingIds = new Set(res.data.map((item) => item._id));
-          const extraStatic = staticDatasets.filter((item) => !existingIds.has(item._id));
-          setData([...res.data, ...extraStatic]);
-        } else {
-          setData(staticDatasets);
-        }
-      } catch (err) {
-        console.error("Using fallback static products dataset", err);
-        setData(staticDatasets);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
-
-  // Preset requested categories
-  const availableCategories = useMemo(() => {
-    return ["all", ...ALLOWED_CATEGORIES];
-  }, []);
-
-  // Sync state with URL params
-  useEffect(() => {
-    const q = searchParams.get("search") || "";
-    const cat = searchParams.get("category") || "all";
-    setSearchTerm(q);
-    setSelectedCategory(cat);
-  }, [searchParams]);
-
-  // Combined search & category filtering
-  useEffect(() => {
-    const q = searchTerm.toLowerCase().trim();
-    const cat = selectedCategory.toLowerCase();
-
-    setFiltered(
-      data.filter((p) => {
-        const pCat = getProductCategory(p);
-        const matchesCategory = cat === "all" || pCat === cat;
-        const matchesSearch =
-          !q ||
-          p.title?.toLowerCase().includes(q) ||
-          p.description?.toLowerCase().includes(q) ||
-          pCat.includes(q) ||
-          q.includes(pCat);
-        return matchesCategory && matchesSearch;
+    dispatch(
+      updateQuantity({
+        productId: product._id,
+        quantity: newQty,
       })
     );
-  }, [data, searchTerm, selectedCategory]);
 
-  function updateQueryParams(newSearch, newCategory) {
-    const params = {};
-    if (newSearch && newSearch.trim()) params.search = newSearch.trim();
-    if (newCategory && newCategory !== "all") params.category = newCategory;
-    setSearchParams(params);
-  }
+    try {
+      await api.patch(
+        `/cart/${product._id}`,
+        {
+          quantity: newQty,
+        }
+      );
+    } catch {
+      /*
+       * Redux remains functional.
+       */
+    }
+  };
 
-  function handleSearchInputChange(e) {
-    const val = e.target.value;
-    setSearchTerm(val);
-    // URL only updates on submit — not on every keystroke
-  }
+  /* =======================================================
+     DECREASE
+  ======================================================= */
 
-  function handleSearchSubmit(e) {
-    e.preventDefault();
-    updateQueryParams(searchTerm, selectedCategory);
-  }
+  const handleDecreaseQty = async (
+    event,
+    product,
+    currentQty
+  ) => {
+    event.stopPropagation();
 
-  function handleCategoryClick(categoryName) {
-    setSelectedCategory(categoryName);
-    updateQueryParams(searchTerm, categoryName);
-  }
+    if (currentQty <= 1) {
+      dispatch(
+        removeFromCart(product._id)
+      );
+
+      try {
+        await api.delete(
+          `/cart/${product._id}`
+        );
+      } catch {
+        /*
+         * Redux remains functional.
+         */
+      }
+
+      return;
+    }
+
+    const newQty =
+      Number(currentQty) - 1;
+
+    dispatch(
+      updateQuantity({
+        productId: product._id,
+        quantity: newQty,
+      })
+    );
+
+    try {
+      await api.patch(
+        `/cart/${product._id}`,
+        {
+          quantity: newQty,
+        }
+      );
+    } catch {
+      /*
+       * Redux remains functional.
+       */
+    }
+  };
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
 
   if (loading) {
-    return <div className="lux-loader">Curating products…</div>;
+    return (
+      <div className="lux-loader-page">
+        <div className="lux-loader-orbit" />
+
+        <p>
+          Curating your collection...
+        </p>
+      </div>
+    );
   }
 
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
   return (
-    <section className="lux-page">
-      {/* 🟢 TOAST NOTIFICATION POPUP */}
+    <main className="lux-page">
+
+      {/* =================================================
+          TOAST
+      ================================================= */}
+
       {toast.show && (
         <div className="toast-popup-banner">
+
           <div className="toast-left">
+
             <span className="toast-check">
-              {toast.type === "wishlist-remove" ? "💔" : toast.type === "wishlist" ? "❤️" : "✅"}
+              {toast.type ===
+              "wishlist-remove" ? (
+                "♡"
+              ) : toast.type ===
+                "wishlist" ? (
+                "♥"
+              ) : (
+                <FiCheck />
+              )}
             </span>
-            {toast.img && <img src={toast.img} alt="" className="toast-img" />}
+
+            {toast.img && (
+              <img
+                src={toast.img}
+                alt=""
+                className="toast-img"
+              />
+            )}
+
             <div className="toast-info">
+
               <strong>
-                {toast.type === "wishlist-remove"
+                {toast.type ===
+                "wishlist-remove"
                   ? "Removed from Wishlist"
-                  : toast.type === "wishlist"
-                  ? "Added to Wishlist!"
-                  : "Item Added to Cart!"}
+                  : toast.type ===
+                    "wishlist"
+                  ? "Added to Wishlist"
+                  : "Added to Cart"}
               </strong>
-              <span className="toast-prod-title">{toast.title}</span>
+
+              <span className="toast-prod-title">
+                {toast.title}
+              </span>
+
             </div>
+
           </div>
-          <button 
-            className="toast-view-cart-btn" 
-            onClick={() => navigate(toast.type?.startsWith("wishlist") ? "/wishlist" : "/cart")}
+
+          <button
+            className="toast-view-cart-btn"
+            onClick={() =>
+              navigate(
+                toast.type?.startsWith(
+                  "wishlist"
+                )
+                  ? "/wishlist"
+                  : "/cart"
+              )
+            }
           >
-            {toast.type?.startsWith("wishlist") ? "❤️ View Wishlist" : "🛒 View Cart"}
+            {toast.type?.startsWith(
+              "wishlist"
+            )
+              ? "View Wishlist"
+              : "View Cart"}
           </button>
+
         </div>
       )}
 
-      <header className="lux-header">
-        <h1>Discover Products</h1>
-        <p>Hand-picked items with premium quality</p>
+      {/* =================================================
+          HERO
+      ================================================= */}
 
-        {/* CATEGORY BUTTONS / PILLS */}
-        <div className="lux-category-section">
-          <div className="lux-category-header">
-            <BiCategoryAlt className="lux-cat-icon" />
-            <span>Select Category:</span>
+      <section className="discover-hero">
+
+        <div className="hero-grid" />
+
+        <div className="hero-glow hero-glow-one" />
+
+        <div className="hero-glow hero-glow-two" />
+
+        <div className="hero-content">
+
+          <span className="discover-eyebrow">
+            <span />
+            SHOPYGLOBE / CURATED COLLECTION
+            <span />
+          </span>
+
+          <h1>
+            Discover{" "}
+            <em>something better.</em>
+          </h1>
+
+          <p>
+            Hand-picked products for modern
+            everyday life. Explore fashion,
+            tech, footwear and sports
+            essentials curated in one
+            beautiful collection.
+          </p>
+
+          <div className="hero-stats">
+
+            <div className="hero-stat">
+              <strong>01</strong>
+              <span>
+                Curated selection
+              </span>
+            </div>
+
+            <div className="hero-stat">
+              <strong>04</strong>
+              <span>
+                Essential categories
+              </span>
+            </div>
+
+            <div className="hero-stat">
+              <strong>∞</strong>
+              <span>
+                Better discoveries
+              </span>
+            </div>
+
           </div>
 
-          <div className="lux-category-pills">
-            {availableCategories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                className={`lux-cat-pill ${
-                  selectedCategory.toLowerCase() === cat.toLowerCase()
-                    ? "active"
-                    : ""
-                }`}
-                onClick={() => handleCategoryClick(cat)}
-              >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-              </button>
-            ))}
+          <button
+            className="browse-btn"
+            onClick={() =>
+              document
+                .getElementById(
+                  "collection"
+                )
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                })
+            }
+          >
+            Browse collection
+            <FiArrowRight />
+          </button>
+
+        </div>
+
+        <div className="hero-scroll">
+          <span />
+          Scroll to explore
+        </div>
+
+      </section>
+
+      {/* =================================================
+          COLLECTION
+      ================================================= */}
+
+      <section
+        id="collection"
+        className="collection-section"
+      >
+
+        {/* TOP */}
+
+        <div className="collection-top">
+
+          <div className="section-title">
+
+            <span className="section-kicker">
+              EXPLORE COLLECTION
+            </span>
+
+            <h2>
+              Shop by{" "}
+              <em>category</em>
+            </h2>
+
+            <p className="section-description">
+              Find something made for you.
+            </p>
+
           </div>
-        </div>
-      </header>
 
-      {filtered.length === 0 ? (
-        <div className="lux-empty-wrap">
-          <BiFilterAlt className="lux-empty-icon" />
-          <p className="lux-empty">No products match your criteria</p>
-        </div>
-      ) : (
-        <div className="lux-grid">
-          {filtered.map((product) => {
-            const isWishlisted = wishlistItems.some((i) => String(i.productId || i._id) === String(product._id));
-            return (
-              <article
-                key={product._id}
-                className="lux-card"
-                onClick={() => handleDetail(product._id)}
-              >
-                <div 
-                  className="lux-media"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDetail(product._id);
-                  }}
-                  title="Click to view product details"
-                >
-                  <button
-                    type="button"
-                    className={`lux-card-heart-btn ${isWishlisted ? "active" : ""}`}
-                    onClick={(e) => handleToggleWishlist(e, product)}
-                    title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-                  >
-                    {isWishlisted ? "❤️" : "🤍"}
-                  </button>
+          <div className="product-count">
+            <strong>
+              {filtered.length}
+            </strong>
 
-                  <span className="lux-badge">{getProductCategory(product)}</span>
-                <img
-                  src={
-                    product.images?.length
-                      ? product.images[0]
-                      : `https://picsum.photos/seed/${product._id}/600/400`
+            {filtered.length === 1
+              ? "product"
+              : "products"}
+          </div>
+
+        </div>
+
+        {/* CATEGORY BAR */}
+
+        <div className="category-bar">
+
+          <div className="category-label">
+            <BiCategoryAlt />
+
+            <span>
+              Browse categories
+            </span>
+          </div>
+
+          <div className="category-pills">
+
+            {availableCategories.map(
+              (category) => (
+                <button
+                  key={category}
+                  type="button"
+                  className={
+                    selectedCategory.toLowerCase() ===
+                    category.toLowerCase()
+                      ? "category-pill active"
+                      : "category-pill"
                   }
-                  alt={product.title}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = `https://picsum.photos/seed/${product._id}/600/400`;
-                  }}
-                />
-              </div>
+                  onClick={() =>
+                    handleCategoryClick(
+                      category
+                    )
+                  }
+                >
+                  {category === "all"
+                    ? "All Products"
+                    : category
+                        .charAt(0)
+                        .toUpperCase() +
+                      category.slice(1)}
 
-              <div className="lux-body">
-                <h3>{product.title}</h3>
-                <p>
-                  {product.description?.length > 90
-                    ? product.description.slice(0, 90) + "…"
-                    : product.description}
-                </p>
-              </div>
+                  {selectedCategory ===
+                    category && (
+                    <span className="pill-check">
+                      ✓
+                    </span>
+                  )}
+                </button>
+              )
+            )}
 
-              <footer className="lux-footer">
-                <span className="lux-price">₹{product.price}</span>
-                <div className="lux-footer-actions">
-                  {(() => {
-                    const cartItem = cartItems.find((i) => String(i.productId || i._id) === String(product._id));
-                    if (cartItem) {
-                      return (
-                        <div className="lux-qty-control" onClick={(e) => e.stopPropagation()}>
+          </div>
+
+        </div>
+
+        {/* PRODUCT HEADING */}
+
+        <div className="products-heading">
+
+          <div>
+
+            <span className="products-kicker">
+              {selectedCategory === "all"
+                ? "THE COMPLETE EDIT"
+                : `${selectedCategory.toUpperCase()} EDIT`}
+            </span>
+
+            <h2>
+              {selectedCategory === "all"
+                ? "Curated for you"
+                : `Best of ${selectedCategory}`}
+            </h2>
+
+            {searchQuery && (
+              <p className="search-result-text">
+                Results for “{searchQuery}”
+              </p>
+            )}
+
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div className="sort-dropdown-container">
+              <select
+                value={sortBy}
+                onChange={handleSortChange}
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: "10px",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  color: "#fff",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                <option value="default" style={{ background: "#050a0f", color: "#fff" }}>Sort: Featured</option>
+                <option value="newest" style={{ background: "#050a0f", color: "#fff" }}>Sort: Newest Arrivals</option>
+                <option value="price-low" style={{ background: "#050a0f", color: "#fff" }}>Price: Low to High</option>
+                <option value="price-high" style={{ background: "#050a0f", color: "#fff" }}>Price: High to Low</option>
+                <option value="rating" style={{ background: "#050a0f", color: "#fff" }}>Sort: Highest Rated</option>
+              </select>
+            </div>
+
+            <span className="product-count">
+              <strong>
+                {filtered.length}
+              </strong>
+              {filtered.length === 1
+                ? " item"
+                : " items"}
+            </span>
+          </div>
+        </div>
+
+        {/* PRODUCTS */}
+
+        {filtered.length === 0 ? (
+
+          <div className="lux-empty-wrap">
+
+            <BiFilterAlt className="lux-empty-icon" />
+
+            <h3>
+              No products found
+            </h3>
+
+            <p>
+              Try another search or
+              explore another category.
+            </p>
+
+            <button
+              onClick={() =>
+                handleCategoryClick(
+                  "all"
+                )
+              }
+              className="empty-reset-btn"
+            >
+              View all products
+            </button>
+
+          </div>
+
+        ) : (
+
+          <div className="lux-grid">
+
+            {filtered.map(
+              (product, index) => {
+
+                const isWishlisted =
+                  wishlistItems.some(
+                    (item) =>
+                      String(
+                        item.productId ||
+                          item._id
+                      ) ===
+                      String(product._id)
+                  );
+
+                const cartItem =
+                  cartItems.find(
+                    (item) =>
+                      String(
+                        item.productId ||
+                          item._id
+                      ) ===
+                      String(product._id)
+                  );
+
+                const image =
+                  product.images?.length
+                    ? product.images[0]
+                    : `https://picsum.photos/seed/${product._id}/600/500`;
+
+                return (
+                  <article
+                    key={product._id}
+                    className="lux-card"
+                    style={{
+                      "--card-index":
+                        index,
+                    }}
+                    onClick={() =>
+                      handleDetail(
+                        product._id
+                      )
+                    }
+                  >
+
+                    {/* IMAGE */}
+
+                    <div className="lux-media">
+
+                      <span className="lux-card-number">
+                        {String(
+                          index + 1
+                        ).padStart(2, "0")}
+                      </span>
+
+                      <button
+                        type="button"
+                        className={
+                          isWishlisted
+                            ? "lux-card-heart-btn active"
+                            : "lux-card-heart-btn"
+                        }
+                        onClick={(event) =>
+                          handleToggleWishlist(
+                            event,
+                            product
+                          )
+                        }
+                        aria-label={
+                          isWishlisted
+                            ? "Remove from wishlist"
+                            : "Add to wishlist"
+                        }
+                      >
+                        {isWishlisted
+                          ? "♥"
+                          : "♡"}
+                      </button>
+
+                      <span className="lux-badge">
+                        {getProductCategory(
+                          product
+                        )}
+                      </span>
+
+                      <div className="product-image-wrap">
+
+                        <img
+                          src={image}
+                          alt={
+                            product.title
+                          }
+                          loading="lazy"
+                          onError={(
+                            event
+                          ) => {
+                            event.currentTarget.onerror =
+                              null;
+
+                            event.currentTarget.src =
+                              `https://picsum.photos/seed/${product._id}/600/500`;
+                          }}
+                        />
+
+                      </div>
+
+                      <div className="image-view-label">
+                        View product
+                        <FiArrowRight />
+                      </div>
+
+                    </div>
+
+                    {/* BODY */}
+
+                    <div className="lux-body">
+
+                      <span className="product-category">
+                        {getProductCategory(
+                          product
+                        )}
+                      </span>
+
+                      <h3>
+                        {product.title}
+                      </h3>
+
+                      <p>
+                        {product.description
+                          ?.length > 90
+                          ? product.description.slice(
+                              0,
+                              90
+                            ) + "…"
+                          : product.description ||
+                            "Premium quality product curated for you."}
+                      </p>
+
+                    </div>
+
+                    {/* FOOTER */}
+
+                    <div className="lux-product-footer">
+
+                      <div className="lux-price-block">
+
+                        <span className="price-label">
+                          PRICE
+                        </span>
+
+                        <span className="lux-price">
+                          ₹
+                          {product.price}
+                        </span>
+
+                      </div>
+
+                      {cartItem ? (
+
+                        <div
+                          className="lux-qty-control"
+                          onClick={(event) =>
+                            event.stopPropagation()
+                          }
+                        >
+
                           <button
                             className="lux-qty-btn"
-                            onClick={(e) => handleDecreaseQty(e, product, cartItem.quantity)}
-                            title={cartItem.quantity === 1 ? "Remove from cart" : "Decrease quantity"}
+                            onClick={(
+                              event
+                            ) =>
+                              handleDecreaseQty(
+                                event,
+                                product,
+                                cartItem.quantity
+                              )
+                            }
                           >
                             −
                           </button>
-                          <span className="lux-qty-val">{cartItem.quantity}</span>
+
+                          <span className="lux-qty-val">
+                            {
+                              cartItem.quantity
+                            }
+                          </span>
+
                           <button
                             className="lux-qty-btn"
-                            onClick={(e) => handleIncreaseQty(e, product, cartItem.quantity)}
-                            title="Increase quantity"
+                            onClick={(
+                              event
+                            ) =>
+                              handleIncreaseQty(
+                                event,
+                                product,
+                                cartItem.quantity
+                              )
+                            }
                           >
                             +
                           </button>
+
                         </div>
-                      );
-                    }
-                    return (
-                      <button
-                        className="lux-cart-btn"
-                        onClick={(e) => handleAddToCart(e, product)}
-                        disabled={addingId === product._id}
-                      >
-                        <FaCartPlus />
-                        {addingId === product._id ? "Adding…" : "Add to Cart"}
-                      </button>
-                    );
-                  })()}
-                  <span className="lux-link">Explore →</span>
-                </div>
-              </footer>
-            </article>
-          );
-        })}
+
+                      ) : (
+
+                        <button
+                          className="lux-cart-btn"
+                          onClick={(
+                            event
+                          ) =>
+                            handleAddToCart(
+                              event,
+                              product
+                            )
+                          }
+                          disabled={
+                            addingId ===
+                            product._id
+                          }
+                        >
+                          <FaCartPlus />
+
+                          {addingId ===
+                          product._id
+                            ? "Adding..."
+                            : "Add to Cart"}
+                        </button>
+
+                      )}
+
+                    </div>
+
+                  </article>
+                );
+              }
+            )}
+
+          </div>
+        )}
+
+      </section>
+
+      {/* =================================================
+          FOOTER
+      ================================================= */}
+
+      <footer className="discover-footer">
+
+        <div className="footer-top">
+
+          <div className="footer-brand">
+
+            <Link
+              to="/"
+              className="footer-logo"
+            >
+              Shoppy
+              <span>Globe</span>
+            </Link>
+
+            <p>
+              A better way to discover
+              the things you love.
+              Thoughtfully designed
+              shopping, without the noise.
+            </p>
+
+            <div className="socials">
+
+              <a
+                href="#instagram"
+                aria-label="Instagram"
+              >
+                <FaInstagram />
+              </a>
+
+              <a
+                href="#facebook"
+                aria-label="Facebook"
+              >
+                <FaFacebookF />
+              </a>
+
+              <a
+                href="#twitter"
+                aria-label="Twitter"
+              >
+                <FaTwitter />
+              </a>
+
+            </div>
+
+          </div>
+
+          <div className="footer-column">
+
+            <h4>Shop</h4>
+
+            <Link to="/productlist">
+              All products
+            </Link>
+
+            <Link to="/productlist?category=clothes">
+              Fashion
+            </Link>
+
+            <Link to="/productlist?category=electronics">
+              Electronics
+            </Link>
+
+            <Link to="/productlist?category=shoes">
+              Footwear
+            </Link>
+
+            <Link to="/productlist?category=sports">
+              Sports
+            </Link>
+
+          </div>
+
+          <div className="footer-column">
+
+            <h4>Discover</h4>
+
+            <Link to="/productlist">
+              Trending
+            </Link>
+
+            <Link to="/productlist?category=shoes">
+              New arrivals
+            </Link>
+
+            <Link to="/productlist">
+              Best sellers
+            </Link>
+
+          </div>
+
+          <div className="footer-column">
+
+            <h4>Account</h4>
+
+            <Link to="/cart">
+              Your cart
+            </Link>
+
+            <Link to="/wishlist">
+              Wishlist
+            </Link>
+
+            <Link to="/orders">
+              Orders
+            </Link>
+
+            <Link to="/profile">
+              Profile
+            </Link>
+
+          </div>
+
         </div>
-      )}
-    </section>
+
+        <div className="footer-bottom">
+
+          <span>
+            © 2026 ShoppyGlobe.
+            All rights reserved.
+          </span>
+
+          <div>
+            <a href="#privacy">
+              Privacy
+            </a>
+
+            <a href="#terms">
+              Terms
+            </a>
+
+            <a href="#contact">
+              Contact
+            </a>
+          </div>
+
+          <span>
+            Designed for better shopping.
+          </span>
+
+        </div>
+
+      </footer>
+
+    </main>
   );
 }
 
 export default ProductList;
-
-
-
-
-

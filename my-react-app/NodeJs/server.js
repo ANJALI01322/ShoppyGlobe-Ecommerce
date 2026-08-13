@@ -30,29 +30,6 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/orders", orderRoutes);
 
 
-app.get("/api/debug/routes", (req, res) => {
-  const routes = [];
-
-  app._router.stack.forEach((middleware) => {
-    if (middleware.route) {
-      routes.push({
-        path: middleware.route.path,
-        methods: middleware.route.methods,
-      });
-    } else if (middleware.name === "router") {
-      middleware.handle.stack.forEach((handler) => {
-        if (handler.route) {
-          routes.push({
-            path: handler.route.path,
-            methods: handler.route.methods,
-          });
-        }
-      });
-    }
-  });
-
-  res.json(routes);
-});
 
 
 import { seedProducts } from "./seedData.js";

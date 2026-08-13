@@ -1,10 +1,17 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useState, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { setCart, addToCart, updateQuantity, removeFromCart } from "../redux/cartSlice";
-import { addToWishlist, removeFromWishlist } from "../redux/wishlistSlice";
-import "./Productdetail.css";
-import api from "../api";
+
+import {
+  addToCart,
+  updateQuantity,
+  removeFromCart,
+} from "../redux/cartSlice";
+
+import {
+  addToWishlist,
+  removeFromWishlist,
+} from "../redux/wishlistSlice";
 
 import { electronicsProducts } from "../data/electronicsData";
 import { clothesProducts } from "../data/clothesData";
@@ -12,624 +19,1393 @@ import { shoesProducts } from "../data/shoesData";
 import { sportsProducts } from "../data/sportsData";
 import { getProductReviews } from "../data/productReviews";
 
-const staticProducts = [...electronicsProducts, ...clothesProducts, ...shoesProducts, ...sportsProducts];
+import api from "../api";
+import "./Productdetail.css";
 
-// Get related products from the same sub-category
-const PHONE_IDS   = new Set(["elec-001","elec-002","elec-015","elec-029","elec-030","elec-045"]);
-const LAPTOP_IDS  = new Set(["elec-003","elec-007","elec-012","elec-028","elec-034","elec-036"]);
-const HEADPH_IDS  = new Set(["elec-004","elec-009","elec-023","elec-037","elec-047"]);
-const TABLET_IDS  = new Set(["elec-006","elec-013","elec-022","elec-041"]);
-const GAMING_IDS  = new Set(["elec-005","elec-026","elec-043","elec-044","elec-049"]);
-const WATCH_IDS   = new Set(["elec-008","elec-035"]);
-const CAMERA_IDS  = new Set(["elec-011","elec-018","elec-019","elec-031"]);
-const TV_IDS      = new Set(["elec-010","elec-020","elec-025","elec-033","elec-051"]);
-const SPEAKER_IDS = new Set(["elec-014","elec-024","elec-032","elec-042","elec-048"]);
-
-const ELEC_SUBCATS = [
-  { ids: PHONE_IDS,   label: "Phones" },
-  { ids: LAPTOP_IDS,  label: "Laptops" },
-  { ids: HEADPH_IDS,  label: "Headphones" },
-  { ids: TABLET_IDS,  label: "Tablets" },
-  { ids: GAMING_IDS,  label: "Gaming" },
-  { ids: WATCH_IDS,   label: "Watches" },
-  { ids: CAMERA_IDS,  label: "Cameras" },
-  { ids: TV_IDS,      label: "TVs" },
-  { ids: SPEAKER_IDS, label: "Speakers" },
+const allStaticProducts = [
+  ...electronicsProducts,
+  ...clothesProducts,
+  ...shoesProducts,
+  ...sportsProducts,
 ];
 
-function getRelatedProducts(currentProduct) {
-  if (!currentProduct) return [];
-  const id = String(currentProduct._id);
-  const cat = (currentProduct.category || "").toLowerCase();
-
-  // Shoes / Clothes / Sports — return same pool
-  if (cat.includes("shoe") || id.startsWith("shoe")) {
-    return shoesProducts.filter((p) => String(p._id) !== id).slice(0, 8);
-  }
-  if (cat.includes("cloth") || id.startsWith("clot")) {
-    return clothesProducts.filter((p) => String(p._id) !== id).slice(0, 8);
-  }
-  if (cat.includes("sport") || id.startsWith("spor")) {
-    return sportsProducts.filter((p) => String(p._id) !== id).slice(0, 8);
-  }
-
-  // Electronics — find matching sub-category by ID whitelist
-  for (const subcat of ELEC_SUBCATS) {
-    if (subcat.ids.has(id)) {
-      return electronicsProducts
-        .filter((p) => subcat.ids.has(String(p._id)) && String(p._id) !== id)
-        .slice(0, 8);
-    }
-  }
-
-  // Fallback for uncategorized electronics (mouse, keyboard, etc.)
-  return electronicsProducts.filter((p) => String(p._id) !== id).slice(0, 8);
-}
-
-
-// Star rendering helper
-function StarRating({ rating, size = "md" }) {
+function StarRating({ rating }) {
   const stars = [];
+
   for (let i = 1; i <= 5; i++) {
     const filled = i <= Math.floor(rating);
-    const half   = !filled && i === Math.ceil(rating) && rating % 1 >= 0.4;
+    const half =
+      !filled && i === Math.ceil(rating) && rating % 1 >= 0.4;
+
     stars.push(
-      <span key={i} className={`star ${filled ? "star-full" : half ? "star-half" : "star-empty"} star-${size}`}>
+      <span
+        key={i}
+        className={`star-icon ${
+          filled ? "full" : half ? "half" : "empty"
+        }`}
+      >
         {filled ? "★" : half ? "⯨" : "☆"}
       </span>
     );
   }
-  return <span className="star-row">{stars}</span>;
+
+  return <div className="star-row">{stars}</div>;
 }
 
-function getProductSpecs(product) {
-  if (!product) return {};
-  const title = product.title || "";
-  const cat = (product.category || "").toLowerCase();
-  const id = String(product._id || "");
-
-  const brandKeywords = [
-    "Apple", "Samsung", "Sony", "Google", "OnePlus", "Nothing", "Xiaomi", "Dell", "ASUS",
-    "Nike", "Adidas", "Puma", "Reebok", "Levi's", "Tommy Hilfiger", "Decathlon", "Canon", "GoPro", "DJI", "Bose", "JBL", "Marshall"
-  ];
-  let brand = "Premium Brand";
-  for (const b of brandKeywords) {
-    if (title.toLowerCase().includes(b.toLowerCase())) {
-      brand = b;
-      break;
-    }
-  }
-
-  let model = title.split("(")[0].replace(new RegExp(brand, "gi"), "").trim() || title;
-
-  let formattedCategory = "Electronics";
-  if (cat.includes("shoe") || id.startsWith("shoe")) formattedCategory = "Footwear & Shoes";
-  else if (cat.includes("cloth") || id.startsWith("clot")) formattedCategory = "Clothing & Fashion";
-  else if (cat.includes("sport") || id.startsWith("spor")) formattedCategory = "Sports & Fitness";
-  else if (title.toLowerCase().includes("phone") || title.toLowerCase().includes("iphone") || title.toLowerCase().includes("galaxy")) formattedCategory = "Smartphones & Mobiles";
-  else if (title.toLowerCase().includes("laptop") || title.toLowerCase().includes("macbook")) formattedCategory = "Laptops & Computers";
-  else if (title.toLowerCase().includes("headphone") || title.toLowerCase().includes("earbuds")) formattedCategory = "Audio & Headphones";
-
-  const stockCount = typeof product.stock === "number" ? product.stock : 25;
-  const isAvailable = stockCount > 0;
-  const availabilityText = isAvailable ? `In Stock (${stockCount} units)` : "Out of Stock";
-
-  let warranty = "1 Year Brand Warranty";
-  if (brand === "Apple" || brand === "Dell" || brand === "Sony" || brand === "Samsung") {
-    warranty = "1 Year Official Manufacturer Warranty";
-  } else if (formattedCategory.includes("Clothing")) {
-    warranty = "30 Days Quality Guarantee & Easy Return";
-  } else if (formattedCategory.includes("Footwear")) {
-    warranty = "6 Months Manufacturer Warranty";
-  }
-
-  return { brand, model, category: formattedCategory, availability: availabilityText, isAvailable, warranty };
-}
-
-function ProductDetail() {
+export default function Productdetail() {
   const { productId } = useParams();
-  const cartItems = useSelector((state) => state.cart.items);
-  const wishlistItems = useSelector((state) => state.wishlist?.items || []);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const reviewsRef = useRef(null);
+  const cartItems = useSelector(
+    (state) => state.cart?.items || []
+  );
 
-  const [data, setData] = useState(null);
+  const wishlistItems = useSelector(
+    (state) => state.wishlist?.items || []
+  );
+
+  const [product, setProduct] = useState(null);
+  const [allProducts, setAllProducts] = useState(allStaticProducts);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [adding, setAdding] = useState(false);
-  const [showSpecs, setShowSpecs] = useState(false);
-  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
-  const [showAllReviews, setShowAllReviews] = useState(false);
-  const [toast, setToast] = useState({ show: false, title: "", img: "", type: "cart" });
+  const [selectedImage, setSelectedImage] = useState("");
+  const [quantity, setQuantity] = useState(1);
 
-  const SAMPLE_ADDRESSES = [
-    {
-      id: "addr-sample-1",
-      fullName: "Shivam Sharma",
-      phone: "9871234567",
-      street: "F-316, Urban Homes, Aditya World City",
-      city: "Ghaziabad",
-      state: "Uttar Pradesh",
-      pincode: "201002",
-      isDefault: true,
-    },
-    {
-      id: "addr-sample-2",
-      fullName: "Rahul Verma",
-      phone: "8800112233",
-      street: "Tower B-402, Sector 62",
-      city: "Noida",
-      state: "Uttar Pradesh",
-      pincode: "201301",
-      isDefault: false,
-    },
-    {
-      id: "addr-sample-3",
-      fullName: "Priya Malhotra",
-      phone: "9911445566",
-      street: "House No. 84, Ring Road, Model Town",
-      city: "New Delhi",
-      state: "Delhi",
-      pincode: "110009",
-      isDefault: false,
-    },
-  ];
+  // Review Form State
+  const [reviewName, setReviewName] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewSubmittedMsg, setReviewSubmittedMsg] = useState("");
 
-  const [savedAddresses] = useState(() => {
-    try {
-      const saved = localStorage.getItem("pvx_user_addresses");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-      return SAMPLE_ADDRESSES;
-    } catch {
-      return SAMPLE_ADDRESSES;
-    }
+  const [reviewsData, setReviewsData] = useState({
+    rating: 0,
+    reviewCount: 0,
+    reviews: [],
   });
 
-  const [selectedAddress, setSelectedAddress] = useState(() => {
-    return savedAddresses.find((a) => a.isDefault) || savedAddresses[0] || null;
+  // Toast
+  const [toast, setToast] = useState({
+    show: false,
+    title: "",
+    img: "",
+    type: "cart",
   });
 
-  const currentCartItem = data ? cartItems.find((i) => String(i.productId || i._id) === String(data._id)) : null;
-  const isWishlisted = data ? wishlistItems.some((i) => String(i.productId || i._id) === String(data._id)) : false;
+  const showToast = (title, img, type = "cart") => {
+    setToast({
+      show: true,
+      title,
+      img,
+      type,
+    });
 
-  async function handleIncreaseQty(currentQty) {
-    if (!data) return;
-    const newQty = currentQty + 1;
-    dispatch(updateQuantity({ productId: data._id, quantity: newQty }));
-    try {
-      await api.patch(`/cart/${data._id}`, { quantity: newQty });
-    } catch {}
-  }
-
-  async function handleDecreaseQty(currentQty) {
-    if (!data) return;
-    if (currentQty <= 1) {
-      dispatch(removeFromCart(data._id));
-      try {
-        await api.delete(`/cart/${data._id}`);
-      } catch {}
-      return;
-    }
-    const newQty = currentQty - 1;
-    dispatch(updateQuantity({ productId: data._id, quantity: newQty }));
-    try {
-      await api.patch(`/cart/${data._id}`, { quantity: newQty });
-    } catch {}
-  }
-
-  const scrollToReviews = () => {
-    if (reviewsRef.current) {
-      reviewsRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    setTimeout(() => {
+      setToast((prev) => ({
+        ...prev,
+        show: false,
+      }));
+    }, 3000);
   };
 
+  // =========================================================
+  // 1. Fetch Product Data
+  // =========================================================
+
   useEffect(() => {
+    let isMounted = true;
+
+    setLoading(true);
+    setError(null);
+    setQuantity(1);
+
     const fetchProduct = async () => {
-      const staticItem = staticProducts.find((p) => String(p._id) === String(productId));
-      if (staticItem) {
-        setData(staticItem);
-        setLoading(false);
-        return;
-      }
+      let found = null;
+
+      // Try API first
       try {
         const res = await api.get(`/products/${productId}`);
-        setData(res.data);
-      } catch {
-        setError("Failed to fetch product");
-      } finally {
+
+        if (res.data && res.data._id) {
+          found = res.data;
+        }
+      } catch (err) {
+        console.log(
+          "API single product fetch fallback to static dataset"
+        );
+      }
+
+      // Fallback to static products
+      if (!found) {
+        found = allStaticProducts.find(
+          (p) => String(p._id) === String(productId)
+        );
+      }
+
+      if (isMounted) {
+        if (found) {
+          setProduct(found);
+
+          const firstImg =
+            found.images && found.images.length > 0
+              ? found.images[0]
+              : `https://picsum.photos/seed/${found._id}/600/600`;
+
+          setSelectedImage(firstImg);
+          setError(null);
+        } else {
+          setError("Product not found");
+        }
+
         setLoading(false);
       }
     };
+
     fetchProduct();
+
+    // Fetch all products for recommendations
+    api
+      .get("/products")
+      .then((res) => {
+        if (
+          Array.isArray(res.data) &&
+          res.data.length > 0
+        ) {
+          const apiIds = new Set(
+            res.data.map((item) => item._id)
+          );
+
+          const extraStatic = allStaticProducts.filter(
+            (item) => !apiIds.has(item._id)
+          );
+
+          if (isMounted) {
+            setAllProducts([
+              ...res.data,
+              ...extraStatic,
+            ]);
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
   }, [productId]);
 
-  async function handleCart() {
-    if (!data) return;
-    try {
-      setAdding(true);
-      await api.get("/auth/me");
-      dispatch(addToCart({ ...data, quantity: 1 }));
-      try {
-        await api.post("/cart/add", {
-          productId: data._id,
-          title: data.title,
-          price: data.price,
-          images: data.images,
-          quantity: 1,
-        });
-      } catch {}
+  // =========================================================
+  // 2. Load Reviews
+  // =========================================================
 
-      // ✨ Show Toast popup banner instead of navigating
-      setToast({
-        show: true,
-        title: data.title,
-        img: data.images?.[0] || "",
-        type: "cart"
+  useEffect(() => {
+    if (productId) {
+      const data = getProductReviews(productId);
+      setReviewsData(data);
+    }
+  }, [productId, reviewSubmittedMsg]);
+
+  // =========================================================
+  // Check if product is in cart
+  // =========================================================
+
+  const cartItem = useMemo(() => {
+    if (!product) return null;
+
+    return cartItems.find(
+      (item) =>
+        String(item.productId || item._id) ===
+        String(product._id)
+    );
+  }, [cartItems, product]);
+
+  // =========================================================
+  // Check if product is in wishlist
+  // =========================================================
+
+  const isWishlisted = useMemo(() => {
+    if (!product) return false;
+
+    return wishlistItems.some(
+      (item) =>
+        String(item._id || item.productId) ===
+        String(product._id)
+    );
+  }, [wishlistItems, product]);
+
+  // =========================================================
+  // Recommendations
+  // =========================================================
+
+  const relatedProducts = useMemo(() => {
+    if (!product) return [];
+
+    const cat = (product.category || "").toLowerCase();
+
+    return allProducts
+      .filter(
+        (p) =>
+          String(p._id) !== String(product._id) &&
+          (p.category || "").toLowerCase() === cat
+      )
+      .slice(0, 4);
+  }, [allProducts, product]);
+
+  // =========================================================
+  // Add To Cart
+  // =========================================================
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    dispatch(
+      addToCart({
+        ...product,
+        quantity,
+      })
+    );
+
+    try {
+      await api.post("/cart/add", {
+        productId: product._id,
+        title: product.title,
+        price: product.price,
+        images: product.images,
+        quantity,
       });
-
-      setTimeout(() => {
-        setToast((prev) => ({ ...prev, show: false }));
-      }, 3500);
-
-    } catch {
-      navigate("/login");
-    } finally {
-      setAdding(false);
+    } catch (e) {
+      // Guest/local cart works normally
     }
-  }
 
-  async function handleWishlist() {
-    if (!data) return;
-    try {
-      await api.get("/auth/me");
-      if (isWishlisted) {
-        dispatch(removeFromWishlist(data._id || data.productId));
-        setToast({
-          show: true,
-          title: data.title,
-          img: data.images?.[0] || "",
-          type: "wishlist-remove"
-        });
+    showToast(
+      product.title,
+      selectedImage,
+      "cart"
+    );
+  };
+
+  // =========================================================
+  // Buy Now
+  // =========================================================
+
+  const handleBuyNow = async () => {
+    if (!product) return;
+
+    dispatch(
+      addToCart({
+        ...product,
+        quantity,
+      })
+    );
+
+    navigate("/checkout", {
+      state: {
+        singleItem: {
+          productId: product._id,
+          title: product.title,
+          price: product.price,
+          images: product.images || [selectedImage],
+          quantity,
+        },
+      },
+    });
+  };
+
+  // =========================================================
+  // Wishlist
+  // =========================================================
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+
+    if (isWishlisted) {
+      dispatch(removeFromWishlist(product._id));
+
+      showToast(
+        product.title,
+        selectedImage,
+        "wishlist-remove"
+      );
+    } else {
+      dispatch(addToWishlist(product));
+
+      showToast(
+        product.title,
+        selectedImage,
+        "wishlist"
+      );
+    }
+  };
+
+  // =========================================================
+  // Increase Quantity
+  // =========================================================
+
+  const handleIncreaseQty = () => {
+    if (cartItem) {
+      const newQty = (cartItem.quantity || 1) + 1;
+
+      dispatch(
+        updateQuantity({
+          productId: product._id,
+          quantity: newQty,
+        })
+      );
+
+      api
+        .patch(`/cart/${product._id}`, {
+          quantity: newQty,
+        })
+        .catch(() => {});
+    } else {
+      setQuantity((q) => q + 1);
+    }
+  };
+
+  // =========================================================
+  // Decrease Quantity
+  // =========================================================
+
+  const handleDecreaseQty = () => {
+    if (cartItem) {
+      const newQty = (cartItem.quantity || 1) - 1;
+
+      if (newQty <= 0) {
+        dispatch(removeFromCart(product._id));
+
+        api
+          .delete(`/cart/${product._id}`)
+          .catch(() => {});
       } else {
-        dispatch(addToWishlist(data));
-        setToast({
-          show: true,
-          title: data.title,
-          img: data.images?.[0] || "",
-          type: "wishlist"
-        });
+        dispatch(
+          updateQuantity({
+            productId: product._id,
+            quantity: newQty,
+          })
+        );
+
+        api
+          .patch(`/cart/${product._id}`, {
+            quantity: newQty,
+          })
+          .catch(() => {});
       }
+    } else {
+      setQuantity((q) => (q > 1 ? q - 1 : 1));
+    }
+  };
+
+  // =========================================================
+  // Add Review
+  // =========================================================
+
+  const handleAddReview = (e) => {
+    e.preventDefault();
+
+    if (
+      !reviewName.trim() ||
+      !reviewText.trim()
+    ) {
+      return;
+    }
+
+    try {
+      const existingReviews = JSON.parse(
+        localStorage.getItem("pvx_user_reviews") || "{}"
+      );
+
+      const itemReviews =
+        existingReviews[productId] || [];
+
+      const newEntry = {
+        id: Date.now(),
+        name: reviewName.trim(),
+        avatar: reviewName
+          .trim()
+          .slice(0, 2)
+          .toUpperCase(),
+        date: "Just now",
+        rating: Number(reviewRating),
+        text: reviewText.trim(),
+      };
+
+      existingReviews[productId] = [
+        newEntry,
+        ...itemReviews,
+      ];
+
+      localStorage.setItem(
+        "pvx_user_reviews",
+        JSON.stringify(existingReviews)
+      );
+
+      setReviewName("");
+      setReviewText("");
+      setReviewRating(5);
+
+      setReviewSubmittedMsg(
+        "Thank you! Your review has been added."
+      );
 
       setTimeout(() => {
-        setToast((prev) => ({ ...prev, show: false }));
-      }, 3500);
-    } catch {
-      navigate("/login");
+        setReviewSubmittedMsg("");
+      }, 4000);
+    } catch (err) {
+      console.error(err);
     }
+  };
+
+  // =========================================================
+  // Loading State
+  // =========================================================
+
+  if (loading) {
+    return (
+      <div className="p3d-page">
+        <div className="p3d-status">
+          Loading product details...
+        </div>
+      </div>
+    );
   }
 
-  if (loading) return <div className="p3d-status">Loading product details…</div>;
-  if (error)   return <div className="p3d-status">{error}</div>;
-  if (!data)   return <div className="p3d-status">Product not found</div>;
+  // =========================================================
+  // Error State
+  // =========================================================
 
-  const { rating, reviewCount, reviews } = getProductReviews(data._id);
-  const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 2);
-  const relatedProducts = getRelatedProducts(data);
-  const specs = getProductSpecs(data);
+  if (error || !product) {
+    return (
+      <div className="p3d-page">
+        <Link
+          to="/productlist"
+          className="p3d-back"
+        >
+          ← Back to collection
+        </Link>
+
+        <div
+          className="p3d-status"
+          style={{ marginTop: "60px" }}
+        >
+          <h2>Product Not Found</h2>
+
+          <p>
+            The requested product could not be located.
+          </p>
+
+          <Link
+            to="/productlist"
+            className="p3d-btn"
+            style={{
+              display: "inline-block",
+              marginTop: "20px",
+              width: "auto",
+              padding: "12px 24px",
+            }}
+          >
+            Explore All Products
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================
+  // Gallery Images
+  // =========================================================
+
+  const galleryImages =
+    product.images &&
+    product.images.length > 0
+      ? product.images
+      : [selectedImage];
+
+  // =========================================================
+  // Main JSX
+  // =========================================================
 
   return (
-    <section className="p3d-page">
-      {/* 🟢 TOAST NOTIFICATION POPUP */}
+    <div className="p3d-page">
+
+      {/* Toast */}
       {toast.show && (
-        <div className="toast-popup-banner">
-          <div className="toast-left">
-            <span className="toast-check">
-              {toast.type === "wishlist-remove" ? "💔" : toast.type === "wishlist" ? "❤️" : "✅"}
+        <div
+          style={{
+            position: "fixed",
+            top: "90px",
+            right: "24px",
+            zIndex: 9999,
+            background: "#0d1b2a",
+            border: "1px solid #00d4aa",
+            borderRadius: "12px",
+            padding: "12px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            boxShadow:
+              "0 10px 30px rgba(0,212,170,0.3)",
+            color: "#fff",
+          }}
+        >
+          {toast.img && (
+            <img
+              src={toast.img}
+              alt=""
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "6px",
+                objectFit: "cover",
+              }}
+            />
+          )}
+
+          <div>
+            <strong
+              style={{
+                display: "block",
+                fontSize: "14px",
+                color: "#00d4aa",
+              }}
+            >
+              {toast.type === "wishlist-remove"
+                ? "Removed from Wishlist"
+                : toast.type === "wishlist"
+                ? "Added to Wishlist"
+                : "Added to Cart"}
+            </strong>
+
+            <span
+              style={{
+                fontSize: "12px",
+                opacity: 0.8,
+              }}
+            >
+              {toast.title}
             </span>
-            {toast.img && <img src={toast.img} alt="" className="toast-img" />}
-            <div className="toast-info">
-              <strong>
-                {toast.type === "wishlist-remove"
-                  ? "Removed from Wishlist"
-                  : toast.type === "wishlist"
-                  ? "Added to Wishlist!"
-                  : "Item Added to Cart!"}
-              </strong>
-              <span className="toast-prod-title">{toast.title}</span>
-            </div>
           </div>
-          <button 
-            className="toast-view-cart-btn" 
-            onClick={() => navigate(toast.type.startsWith("wishlist") ? "/wishlist" : "/cart")}
-          >
-            {toast.type.startsWith("wishlist") ? "❤️ View Wishlist" : "🛒 View Cart"}
-          </button>
         </div>
       )}
 
-      <Link to="/productlist" className="p3d-back">← Back to Products</Link>
+      {/* Back Button */}
+
+      <Link
+        to="/productlist"
+        className="p3d-back"
+      >
+        ← Back to collection
+      </Link>
+
+      {/* Main 3D Card Stage */}
 
       <div className="p3d-stage">
         <div className="p3d-card">
-          {/* IMAGE */}
+
+          {/* Image Side */}
+
           <div className="p3d-image">
             <img
-              src={data.images?.[0] || `https://picsum.photos/seed/${data._id}/600/400`}
-              alt={data.title}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = `https://picsum.photos/seed/${data._id}/600/400`;
+              src={selectedImage}
+              alt={product.title}
+            />
+
+            {galleryImages.length > 1 && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "20px",
+                  display: "flex",
+                  gap: "8px",
+                }}
+              >
+                {galleryImages.map(
+                  (imgUrl, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() =>
+                        setSelectedImage(imgUrl)
+                      }
+                      style={{
+                        border:
+                          selectedImage === imgUrl
+                            ? "2px solid #00d4aa"
+                            : "1px solid rgba(255,255,255,0.2)",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                        background: "none",
+                        cursor: "pointer",
+                        padding: 0,
+                      }}
+                    >
+                      <img
+                        src={imgUrl}
+                        alt=""
+                        style={{
+                          width: "45px",
+                          height: "45px",
+                          objectFit: "cover",
+                          padding: 0,
+                        }}
+                      />
+                    </button>
+                  )
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Content Side */}
+
+          <div className="p3d-content">
+
+            <div
+              style={{
+                textTransform: "uppercase",
+                fontSize: "12px",
+                letterSpacing: "1.5px",
+                color: "#00d4aa",
+                fontWeight: 700,
+                marginBottom: "8px",
+              }}
+            >
+              {product.category || "Curated"}
+            </div>
+
+            <h1>{product.title}</h1>
+
+            {/* Rating Row */}
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                marginBottom: "16px",
+              }}
+            >
+              <StarRating
+                rating={reviewsData.rating}
+              />
+
+              <span
+                style={{
+                  fontSize: "14px",
+                  color: "var(--p3d-muted)",
+                }}
+              >
+                <strong>
+                  {reviewsData.rating}
+                </strong>{" "}
+                ({reviewsData.reviewCount} customer
+                reviews)
+              </span>
+            </div>
+
+            <p className="p3d-desc">
+              {product.description}
+            </p>
+
+            {/* Specs Box */}
+
+            <div className="p3d-specs-box">
+              <h3>
+                Specifications & Availability
+              </h3>
+
+              <div className="p3d-specs-grid">
+
+                <div className="p3d-spec-row">
+                  <span className="p3d-spec-label">
+                    Availability
+                  </span>
+
+                  <span className="p3d-spec-value p3d-stock-badge in-stock">
+                    ✓ In Stock (
+                    {product.stock || 25} available)
+                  </span>
+                </div>
+
+                <div className="p3d-spec-row">
+                  <span className="p3d-spec-label">
+                    Department
+                  </span>
+
+                  <span className="p3d-spec-value">
+                    {(
+                      product.category ||
+                      "General"
+                    ).toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="p3d-spec-row">
+                  <span className="p3d-spec-label">
+                    Delivery
+                  </span>
+
+                  <span className="p3d-spec-value">
+                    Express 2-Day Delivery
+                  </span>
+                </div>
+
+                <div className="p3d-spec-row">
+                  <span className="p3d-spec-label">
+                    Warranty
+                  </span>
+
+                  <span className="p3d-spec-value">
+                    1 Year Official Guarantee
+                  </span>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Price Row */}
+
+            <div className="p3d-price">
+              <span>
+                Price (Taxes Included)
+              </span>
+
+              <strong>
+                ₹{product.price}
+              </strong>
+            </div>
+
+            {/* Quantity Selector */}
+
+            <div className="p3d-qty-wrapper">
+              <span className="p3d-qty-label">
+                Quantity
+              </span>
+
+              <div className="p3d-qty-controls">
+
+                <button
+                  type="button"
+                  className="p3d-qty-btn"
+                  onClick={handleDecreaseQty}
+                >
+                  −
+                </button>
+
+                <span className="p3d-qty-value">
+                  {cartItem
+                    ? cartItem.quantity
+                    : quantity}
+                </span>
+
+                <button
+                  type="button"
+                  className="p3d-qty-btn"
+                  onClick={handleIncreaseQty}
+                >
+                  +
+                </button>
+
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+
+            <div className="p3d-action-buttons">
+
+              {cartItem ? (
+                <button
+                  type="button"
+                  className="p3d-btn"
+                  onClick={() =>
+                    navigate("/cart")
+                  }
+                >
+                  ✓ Go to Cart
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="p3d-btn"
+                  onClick={handleAddToCart}
+                >
+                  🛒 Add to Cart
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="p3d-btn p3d-btn-pay"
+                onClick={handleBuyNow}
+              >
+                ⚡ Buy Now
+              </button>
+
+              <button
+                type="button"
+                className={`p3d-wishlist-btn ${
+                  isWishlisted
+                    ? "wishlisted"
+                    : ""
+                }`}
+                style={{
+                  gridColumn: "span 2",
+                }}
+                onClick={handleToggleWishlist}
+              >
+                {isWishlisted
+                  ? "♥ Saved to Wishlist"
+                  : "♡ Save to Wishlist"}
+              </button>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Customer Reviews Section */}
+
+      <div
+        style={{
+          maxWidth: "1100px",
+          margin: "60px auto 0",
+          background: "var(--p3d-card)",
+          borderRadius: "24px",
+          border:
+            "1px solid var(--p3d-border)",
+          padding: "36px",
+          backdropFilter: "blur(20px)",
+        }}
+      >
+
+        <h2
+          style={{
+            fontSize: "24px",
+            fontWeight: 800,
+            marginBottom: "24px",
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          Customer Reviews & Ratings
+        </h2>
+
+        {/* Rating Summary Banner */}
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "30px",
+            background:
+              "rgba(0, 212, 170, 0.05)",
+            border:
+              "1px solid rgba(0, 212, 170, 0.15)",
+            borderRadius: "16px",
+            padding: "24px",
+            marginBottom: "36px",
+            flexWrap: "wrap",
+          }}
+        >
+
+          <div
+            style={{
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "44px",
+                fontWeight: 900,
+                color: "#00d4aa",
+                lineHeight: 1,
+              }}
+            >
+              {reviewsData.rating}
+            </div>
+
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--p3d-muted)",
+                marginTop: "4px",
+              }}
+            >
+              out of 5 stars
+            </div>
+          </div>
+
+          <div>
+            <StarRating
+              rating={reviewsData.rating}
+            />
+
+            <div
+              style={{
+                fontSize: "14px",
+                color: "var(--p3d-muted)",
+                marginTop: "6px",
+              }}
+            >
+              Based on{" "}
+              {reviewsData.reviewCount} verified
+              buyer reviews
+            </div>
+          </div>
+
+        </div>
+
+        {/* Write a Review Form */}
+
+        <form
+          onSubmit={handleAddReview}
+          style={{
+            background:
+              "rgba(255, 255, 255, 0.02)",
+            border:
+              "1px solid rgba(255, 255, 255, 0.06)",
+            borderRadius: "16px",
+            padding: "24px",
+            marginBottom: "36px",
+          }}
+        >
+
+          <h3
+            style={{
+              fontSize: "16px",
+              fontWeight: 700,
+              marginBottom: "16px",
+              color: "#00d4aa",
+            }}
+          >
+            Write a Customer Review
+          </h3>
+
+          {reviewSubmittedMsg && (
+            <div
+              style={{
+                color: "#00d4aa",
+                fontSize: "14px",
+                marginBottom: "16px",
+                fontWeight: 600,
+              }}
+            >
+              {reviewSubmittedMsg}
+            </div>
+          )}
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "1fr 1fr",
+              gap: "16px",
+              marginBottom: "16px",
+            }}
+          >
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "12px",
+                  color: "var(--p3d-muted)",
+                  marginBottom: "6px",
+                }}
+              >
+                YOUR NAME
+              </label>
+
+              <input
+                type="text"
+                value={reviewName}
+                onChange={(e) =>
+                  setReviewName(e.target.value)
+                }
+                placeholder="Enter your name"
+                required
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  borderRadius: "10px",
+                  background:
+                    "rgba(0,0,0,0.4)",
+                  border:
+                    "1px solid rgba(255,255,255,0.1)",
+                  color: "#fff",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "12px",
+                  color: "var(--p3d-muted)",
+                  marginBottom: "6px",
+                }}
+              >
+                RATING
+              </label>
+
+              <select
+                value={reviewRating}
+                onChange={(e) =>
+                  setReviewRating(
+                    Number(e.target.value)
+                  )
+                }
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  borderRadius: "10px",
+                  background: "#070d14",
+                  border:
+                    "1px solid rgba(255,255,255,0.1)",
+                  color: "#fff",
+                  fontFamily: "inherit",
+                }}
+              >
+                <option value={5}>
+                  ★★★★★ (5/5 Excellent)
+                </option>
+
+                <option value={4}>
+                  ★★★★☆ (4/5 Very Good)
+                </option>
+
+                <option value={3}>
+                  ★★★☆☆ (3/5 Average)
+                </option>
+
+                <option value={2}>
+                  ★★☆☆☆ (2/5 Below Average)
+                </option>
+
+                <option value={1}>
+                  ★☆☆☆☆ (1/5 Poor)
+                </option>
+              </select>
+            </div>
+
+          </div>
+
+          <div
+            style={{
+              marginBottom: "16px",
+            }}
+          >
+            <label
+              style={{
+                display: "block",
+                fontSize: "12px",
+                color: "var(--p3d-muted)",
+                marginBottom: "6px",
+              }}
+            >
+              YOUR REVIEW
+            </label>
+
+            <textarea
+              rows={3}
+              value={reviewText}
+              onChange={(e) =>
+                setReviewText(e.target.value)
+              }
+              placeholder="Share details of your experience with this product..."
+              required
+              style={{
+                width: "100%",
+                padding: "12px 14px",
+                borderRadius: "10px",
+                background:
+                  "rgba(0,0,0,0.4)",
+                border:
+                  "1px solid rgba(255,255,255,0.1)",
+                color: "#fff",
+                fontFamily: "inherit",
+                resize: "vertical",
               }}
             />
           </div>
 
-          {/* CONTENT */}
-          <div className="p3d-content">
-            <h1>{data.title}</h1>
-
-            {/* ⭐ RATING & REVIEWS LINK */}
-            <div className="p3d-rating-row">
-              <StarRating rating={rating} size="lg" />
-              <span className="p3d-rating-score">{rating}</span>
-              <span className="p3d-rating-count">({reviewCount.toLocaleString()} ratings)</span>
-              <button className="p3d-reviews-link-btn" onClick={scrollToReviews}>
-                💬 Customer Reviews
-              </button>
-            </div>
-
-            <p className="p3d-desc">{data.description}</p>
-
-            {/* 📍 DELIVERY DETAILS OPTION */}
-            <div className="p3d-delivery-box">
-              <div className="p3d-delivery-header">
-                <div className="p3d-delivery-left">
-                  <span className="p3d-delivery-icon">🚚</span>
-                  <div>
-                    <h4>Delivery Details</h4>
-                    <p className="p3d-delivery-address-text">
-                      {selectedAddress ? (
-                        <>
-                          Deliver to: <strong>{selectedAddress.fullName}</strong> ({selectedAddress.city} - {selectedAddress.pincode})
-                        </>
-                      ) : (
-                        "Select delivery address to check availability"
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="p3d-change-addr-btn"
-                  onClick={() => setShowDeliveryModal(true)}
-                >
-                  📍 Select Address
-                </button>
-              </div>
-              <div className="p3d-delivery-perks">
-                <span className="p3d-perk-badge">⚡ Free Express Delivery by Tomorrow, 5:00 PM</span>
-                <span className="p3d-perk-badge">💵 Cash on Delivery Available</span>
-                <span className="p3d-perk-badge">🔄 7 Days Replacement Guarantee</span>
-              </div>
-            </div>
-
-            {/* 📋 PRODUCT SPECIFICATIONS COLLAPSIBLE OPTION */}
-            <div className="p3d-specs-accordion">
-              <button
-                type="button"
-                className={`p3d-specs-toggle-btn ${showSpecs ? "active" : ""}`}
-                onClick={() => setShowSpecs((prev) => !prev)}
-              >
-                <div className="p3d-specs-toggle-left">
-                  <span className="p3d-specs-icon">📋</span>
-                  <span>Product Specifications</span>
-                </div>
-                <span className="p3d-specs-arrow">{showSpecs ? "▲ Hide Specifications" : "▼ View Specifications Table"}</span>
-              </button>
-
-              {showSpecs && (
-                <div className="p3d-specs-table-wrapper">
-                  <table className="p3d-specs-table">
-                    <tbody>
-                      <tr>
-                        <td className="spec-table-label">🏷️ Brand</td>
-                        <td className="spec-table-val">{specs.brand}</td>
-                      </tr>
-                      <tr>
-                        <td className="spec-table-label">📱 Model</td>
-                        <td className="spec-table-val">{specs.model}</td>
-                      </tr>
-                      <tr>
-                        <td className="spec-table-label">📁 Category</td>
-                        <td className="spec-table-val">{specs.category}</td>
-                      </tr>
-                      <tr>
-                        <td className="spec-table-label">📦 Availability</td>
-                        <td className="spec-table-val">
-                          <span className={`p3d-stock-badge ${specs.isAvailable ? "in-stock" : "out-of-stock"}`}>
-                            {specs.isAvailable ? "🟢 " : "🔴 "}{specs.availability}
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="spec-table-label">🛡️ Warranty</td>
-                        <td className="spec-table-val">{specs.warranty}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* PRICE */}
-            <div className="p3d-price">
-              <span>Price</span>
-              <strong>₹{Number(data.price).toFixed(2)}</strong>
-            </div>
-
-            {/* ACTION BUTTONS */}
-            <div className="p3d-action-buttons">
-              {currentCartItem ? (
-                <div className="p3d-qty-control">
-                  <button
-                    className="p3d-qty-ctrl-btn"
-                    onClick={() => handleDecreaseQty(currentCartItem.quantity)}
-                    title={currentCartItem.quantity === 1 ? "Remove from cart" : "Decrease quantity"}
-                  >
-                    −
-                  </button>
-                  <span className="p3d-qty-ctrl-val">{currentCartItem.quantity}</span>
-                  <button
-                    className="p3d-qty-ctrl-btn"
-                    onClick={() => handleIncreaseQty(currentCartItem.quantity)}
-                    title="Increase quantity"
-                  >
-                    +
-                  </button>
-                </div>
-              ) : (
-                <button className="p3d-btn" onClick={handleCart} disabled={adding}>
-                  🛒 {adding ? "Adding to Cart…" : "Add to Cart"}
-                </button>
-              )}
-              <button
-                className={`p3d-wishlist-btn ${isWishlisted ? "wishlisted" : ""}`}
-                onClick={handleWishlist}
-                title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-              >
-                <span style={{ fontSize: "18px" }}>{isWishlisted ? "❤️" : "🤍"}</span>
-                <span>{isWishlisted ? "Wishlisted" : "Add to Wishlist"}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ===== EXPLORE MORE SECTION ===== */}
-      {relatedProducts.length > 0 && (
-        <div className="p3d-explore-container">
-          <div className="p3d-explore-header" style={{ marginBottom: "20px" }}>
-            <h3 style={{ fontSize: "20px", fontWeight: "800", color: "#ffffff" }}>✨ Explore More Similar Products</h3>
-          </div>
-          <div className="p3d-explore-grid-wrap">
-            <div className="p3d-explore-grid">
-              {relatedProducts.map((p) => (
-                <div
-                  className="p3d-explore-card"
-                  key={p._id}
-                  onClick={() => navigate(`/productdetail/${p._id}`)}
-                >
-                  <div className="p3d-explore-img">
-                    <img
-                      src={p.images?.[0] || `https://picsum.photos/seed/${p._id}/400/300`}
-                      alt={p.title}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = `https://picsum.photos/seed/${p._id}/400/300`;
-                      }}
-                    />
-                  </div>
-                  <div className="p3d-explore-body">
-                    <h4>{p.title}</h4>
-                    <span className="p3d-explore-price">₹{p.price}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ===== REVIEWS SECTION ===== */}
-      <div className="p3d-reviews-section" ref={reviewsRef} id="reviews-section">
-        <div className="p3d-reviews-header">
-          <h2>Customer Reviews</h2>
-          <div className="p3d-reviews-summary">
-            <div className="p3d-big-rating">
-              <span className="p3d-big-score">{rating}</span>
-              <div>
-                <StarRating rating={rating} size="xl" />
-                <p>{reviewCount.toLocaleString()} verified ratings</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="p3d-reviews-list">
-          {displayedReviews.map((rev) => (
-            <div className="p3d-review-card" key={rev.id}>
-              <div className="p3d-review-top">
-                <div className="p3d-avatar">{rev.avatar}</div>
-                <div className="p3d-reviewer-info">
-                  <span className="p3d-reviewer-name">{rev.name}</span>
-                  <span className="p3d-reviewer-date">{rev.date}</span>
-                </div>
-                <StarRating rating={rev.rating} size="sm" />
-              </div>
-              <p className="p3d-review-text">{rev.text}</p>
-            </div>
-          ))}
-        </div>
-
-        {reviews.length > 2 && (
           <button
-            className="p3d-show-more"
-            onClick={() => setShowAllReviews((prev) => !prev)}
+            type="submit"
+            className="p3d-btn"
+            style={{
+              width: "auto",
+              padding: "12px 28px",
+            }}
           >
-            {showAllReviews ? "▲ Show Less" : `▼ Show All ${reviews.length} Reviews`}
+            Submit Review
           </button>
-        )}
-      </div>
 
-      {/* 📍 ADDRESS SELECTION POPUP MODAL */}
-      {showDeliveryModal && (
-        <div className="address-select-modal-overlay">
-          <div className="address-select-modal">
-            <div className="modal-header">
-              <h3>📍 Select Delivery Address</h3>
-              <button className="close-modal-btn" onClick={() => setShowDeliveryModal(false)}>✕</button>
-            </div>
+        </form>
 
-            <div className="saved-addresses-modal-list">
-              {savedAddresses.map((addr) => (
+        {/* Existing Reviews List */}
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}
+        >
+          {reviewsData.reviews.map(
+            (rev) => (
+              <div
+                key={rev.id}
+                style={{
+                  background:
+                    "rgba(255, 255, 255, 0.02)",
+                  border:
+                    "1px solid rgba(255, 255, 255, 0.06)",
+                  borderRadius: "14px",
+                  padding: "18px 22px",
+                }}
+              >
+
                 <div
-                  key={addr.id || addr._id}
-                  className={`modal-addr-card ${selectedAddress?.id === addr.id ? "selected" : ""}`}
-                  onClick={() => {
-                    setSelectedAddress(addr);
-                    setShowDeliveryModal(false);
+                  style={{
+                    display: "flex",
+                    justifyContent:
+                      "space-between",
+                    alignItems: "center",
+                    marginBottom: "10px",
                   }}
                 >
-                  <div className="modal-addr-top">
-                    <strong>{addr.fullName}</strong>
-                    {selectedAddress?.id === addr.id && <span className="default-tag">Selected</span>}
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                    }}
+                  >
+
+                    <div
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        background:
+                          "linear-gradient(135deg, #00d4aa, #007791)",
+                        color: "#050a0f",
+                        fontWeight: 800,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent:
+                          "center",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {rev.avatar || "U"}
+                    </div>
+
+                    <div>
+                      <strong
+                        style={{
+                          display: "block",
+                          fontSize: "14px",
+                          color: "#fff",
+                        }}
+                      >
+                        {rev.name}
+                      </strong>
+
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          color:
+                            "var(--p3d-muted)",
+                        }}
+                      >
+                        {rev.date}
+                      </span>
+                    </div>
+
                   </div>
-                  <p className="modal-addr-phone">📞 {addr.phone}</p>
-                  <p className="modal-addr-street">
-                    {addr.street}, {addr.city}, {addr.state} - {addr.pincode}
-                  </p>
+
+                  <StarRating
+                    rating={rev.rating}
+                  />
+
                 </div>
-              ))}
-            </div>
+
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color:
+                      "var(--p3d-muted)",
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}
+                >
+                  "{rev.text}"
+                </p>
+
+              </div>
+            )
+          )}
+        </div>
+
+      </div>
+
+      {/* Recommendations */}
+
+      {relatedProducts.length > 0 && (
+        <div
+          style={{
+            maxWidth: "1100px",
+            margin: "60px auto 0",
+          }}
+        >
+
+          <h2
+            style={{
+              fontSize: "22px",
+              fontWeight: 800,
+              marginBottom: "24px",
+              color: "#fff",
+            }}
+          >
+            You May Also Like
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fill, minmax(240px, 1fr))",
+              gap: "20px",
+            }}
+          >
+
+            {relatedProducts.map(
+              (rel) => (
+                <div
+                  key={rel._id}
+                  onClick={() => {
+                    navigate(
+                      `/productdetail/${rel._id}`
+                    );
+
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "smooth",
+                    });
+                  }}
+                  style={{
+                    background:
+                      "var(--p3d-card)",
+                    border:
+                      "1px solid var(--p3d-border)",
+                    borderRadius: "20px",
+                    padding: "16px",
+                    cursor: "pointer",
+                    transition:
+                      "transform 0.25s ease, border-color 0.25s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform =
+                      "translateY(-4px)";
+
+                    e.currentTarget.style.borderColor =
+                      "rgba(0, 212, 170, 0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform =
+                      "none";
+
+                    e.currentTarget.style.borderColor =
+                      "var(--p3d-border)";
+                  }}
+                >
+
+                  <img
+                    src={
+                      rel.images?.[0] ||
+                      `https://picsum.photos/seed/${rel._id}/400/300`
+                    }
+                    alt={rel.title}
+                    style={{
+                      width: "100%",
+                      height: "160px",
+                      objectFit: "contain",
+                      borderRadius: "12px",
+                      background:
+                        "rgba(0,0,0,0.3)",
+                      padding: "10px",
+                      marginBottom: "12px",
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#00d4aa",
+                      fontWeight: 700,
+                      textTransform:
+                        "uppercase",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    {rel.category || "Item"}
+                  </div>
+
+                  <h4
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      color: "#fff",
+                      margin: "0 0 8px",
+                      lineHeight: 1.3,
+                      height: "36px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {rel.title}
+                  </h4>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent:
+                        "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <strong
+                      style={{
+                        fontSize: "16px",
+                        color: "#00d4aa",
+                      }}
+                    >
+                      ₹{rel.price}
+                    </strong>
+
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color:
+                          "var(--p3d-muted)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      View →
+                    </span>
+                  </div>
+
+                </div>
+              )
+            )}
+
           </div>
         </div>
       )}
-    </section>
+
+    </div>
   );
 }
-
-export default ProductDetail;
-
-
-
-
-
-
-
-
-
-
