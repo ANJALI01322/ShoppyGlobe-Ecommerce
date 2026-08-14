@@ -293,7 +293,7 @@ export default function Productdetail() {
   // Wishlist
   // =========================================================
 
-  const handleToggleWishlist = () => {
+  const handleToggleWishlist = async () => {
     if (!product) return;
 
     if (isWishlisted) {
@@ -304,6 +304,10 @@ export default function Productdetail() {
         selectedImage,
         "wishlist-remove"
       );
+
+      try {
+        await api.delete(`/wishlist/${product._id}`);
+      } catch {}
     } else {
       dispatch(addToWishlist(product));
 
@@ -312,6 +316,12 @@ export default function Productdetail() {
         selectedImage,
         "wishlist"
       );
+
+      try {
+        await api.post("/wishlist", {
+          productId: product._id,
+        });
+      } catch {}
     }
   };
 

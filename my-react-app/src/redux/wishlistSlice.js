@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// Load initial wishlist from localStorage
 const loadWishlistFromStorage = () => {
   try {
     const stored = localStorage.getItem("pvx_wishlist");
@@ -16,23 +15,55 @@ const wishlistSlice = createSlice({
     items: loadWishlistFromStorage(),
   },
   reducers: {
-    addToWishlist: (state, action) => {
-      const exists = state.items.find((item) => String(item._id) === String(action.payload._id));
-      if (!exists) {
-        state.items.push(action.payload);
+    setWishlist: (state, action) => {
+      const raw = action.payload?.products || action.payload?.items || action.payload;
+      if (!Array.isArray(raw)) return;
+
+      state.items = raw.map((i) => {
+        if (typeof i === "object" && i !== null) {
+          return {
+            _id: i._id || i.id,
+            title: i.title,
+            price: i.price,
+            images: i.images || (i.image ? [i.image] : []),
+            category: i.category,
+            rating: i.rating,
+            stock: i.stock,
+          };
+        }
+        return { _id: i };
+      });
+      try {
         localStorage.setItem("pvx_wishlist", JSON.stringify(state.items));
+      } catch {}
+    },
+    addToWishlist: (state, action) => {
+      const product = action.payload;
+      const prodId = product._id || product.id;
+      const exists = state.items.find((item) => String(item._id || item) === String(prodId));
+      if (!exists) {
+        state.items.push(product);
+        try {
+          localStorage.setItem("pvx_wishlist", JSON.stringify(state.items));
+        } catch {}
       }
     },
     removeFromWishlist: (state, action) => {
-      state.items = state.items.filter((item) => String(item._id) !== String(action.payload));
-      localStorage.setItem("pvx_wishlist", JSON.stringify(state.items));
+      const prodId = action.payload;
+      state.items = state.items.filter((item) => String(item._id || item) !== String(prodId));
+      try {
+        localStorage.setItem("pvx_wishlist", JSON.stringify(state.items));
+      } catch {}
     },
     clearWishlist: (state) => {
       state.items = [];
-      localStorage.removeItem("pvx_wishlist");
+      try {
+        localStorage.removeItem("pvx_wishlist");
+      } catch {}
     },
   },
 });
 
-export const { addToWishlist, removeFromWishlist, clearWishlist } = wishlistSlice.actions;
+export const { setWishlist, addToWishlist, removeFromWishlist, clearWishlist } = wishlistSlice.actions;
 export default wishlistSlice.reducer;
+

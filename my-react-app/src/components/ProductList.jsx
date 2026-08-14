@@ -421,28 +421,41 @@ function ProductList() {
      WISHLIST
   ======================================================= */
 
-  const handleToggleWishlist = (event, product) => {
-    event.stopPropagation();
+  const handleToggleWishlist = async (event, product) => {
+    if (event && event.stopPropagation) {
+      event.stopPropagation();
+    }
+
+    const targetProduct = product || currentProduct;
+    if (!targetProduct || !targetProduct._id) return;
 
     const isWishlisted = wishlistItems.some(
       (item) =>
-        String(item.productId || item._id) === String(product._id)
+        String(item._id || item.productId || item) === String(targetProduct._id)
     );
 
     if (isWishlisted) {
-      dispatch(removeFromWishlist(product._id));
+      dispatch(removeFromWishlist(targetProduct._id));
       showToast(
-        product.title,
-        product.images?.[0] || "",
+        targetProduct.title,
+        targetProduct.images?.[0] || "",
         "wishlist-remove"
       );
+      try {
+        await api.delete(`/wishlist/${targetProduct._id}`);
+      } catch {}
     } else {
-      dispatch(addToWishlist(product));
+      dispatch(addToWishlist(targetProduct));
       showToast(
-        product.title,
-        product.images?.[0] || "",
+        targetProduct.title,
+        targetProduct.images?.[0] || "",
         "wishlist"
       );
+      try {
+        await api.post("/wishlist", {
+          productId: targetProduct._id,
+        });
+      } catch {}
     }
   };
 
