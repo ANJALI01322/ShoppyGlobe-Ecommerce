@@ -269,33 +269,19 @@ function ProductList() {
           Array.isArray(response.data) &&
           response.data.length > 0
         ) {
-          const existingIds = new Set(
-            response.data.map(
-              (item) => item._id
-            )
-          );
-
-          const extraStatic =
-            staticDatasets.filter(
-              (item) =>
-                !existingIds.has(item._id)
-            );
-
-          setData([
-            ...response.data,
-            ...extraStatic,
-          ]);
+          setData(response.data);
         } else if (mounted) {
-          setData(staticDatasets);
+          setData([]);
         }
       } catch (error) {
         console.error(
-          "Using fallback static products dataset:",
+          "Failed to fetch products from API:",
           error
         );
 
         if (mounted) {
-          setData(staticDatasets);
+          setData([]);
+          setError("Unable to load products from server.");
         }
       } finally {
         if (mounted) {
