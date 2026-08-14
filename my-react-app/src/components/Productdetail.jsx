@@ -120,44 +120,34 @@ export default function Productdetail() {
     setQuantity(1);
 
     const fetchProduct = async () => {
-      let found = null;
-
-      // Try API first
       try {
         const res = await api.get(`/products/${productId}`);
 
-        if (res.data && res.data._id) {
-          found = res.data;
+        if (isMounted) {
+          if (res.data && res.data._id) {
+            setProduct(res.data);
+
+            const firstImg =
+              res.data.images && res.data.images.length > 0
+                ? res.data.images[0]
+                : `https://picsum.photos/seed/${res.data._id}/600/600`;
+
+            setSelectedImage(firstImg);
+            setError(null);
+          } else {
+            setError("Unable to load product.");
+          }
         }
       } catch (err) {
-        console.log(
-          "API single product fetch fallback to static dataset"
-        );
-      }
-
-      // Fallback to static products
-      if (!found) {
-        found = allStaticProducts.find(
-          (p) => String(p._id) === String(productId)
-        );
-      }
-
-      if (isMounted) {
-        if (found) {
-          setProduct(found);
-
-          const firstImg =
-            found.images && found.images.length > 0
-              ? found.images[0]
-              : `https://picsum.photos/seed/${found._id}/600/600`;
-
-          setSelectedImage(firstImg);
-          setError(null);
-        } else {
-          setError("Product not found");
+        console.error("Failed to fetch product from API:", err);
+        if (isMounted) {
+          setError("Unable to load product.");
+          setProduct(null);
         }
-
-        setLoading(false);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -169,22 +159,10 @@ export default function Productdetail() {
       .then((res) => {
         if (
           Array.isArray(res.data) &&
-          res.data.length > 0
+          res.data.length > 0 &&
+          isMounted
         ) {
-          const apiIds = new Set(
-            res.data.map((item) => item._id)
-          );
-
-          const extraStatic = allStaticProducts.filter(
-            (item) => !apiIds.has(item._id)
-          );
-
-          if (isMounted) {
-            setAllProducts([
-              ...res.data,
-              ...extraStatic,
-            ]);
-          }
+          setAllProducts(res.data);
         }
       })
       .catch(() => {});
