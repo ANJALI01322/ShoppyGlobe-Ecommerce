@@ -220,6 +220,81 @@ export async function updateProfile(req, res) {
     return res.status(500).json({ message: "Error updating profile" });
   }
 }
+/* ===================== GET ADDRESSES ===================== */
+export async function getAddresses(req, res) {
+  try {
+    const userEmail = req.user?.email;
+    const userId = req.user?._id || req.user?.id;
+
+    if (mongoose.connection.readyState === 1) {
+      let dbUser = null;
+      if (userEmail) {
+        dbUser = await auth.findOne({ email: userEmail.toLowerCase().trim() });
+      }
+      if (!dbUser && userId) {
+        try {
+          dbUser = await auth.findById(userId);
+        } catch (e) {}
+      }
+
+      if (dbUser) {
+        return res.status(200).json({ addresses: dbUser.addresses || [] });
+      }
+    }
+
+    return res.status(200).json({ addresses: [] });
+  } catch (error) {
+    console.error("GET ADDRESSES ERROR:", error);
+    return res.status(500).json({ message: "Failed to fetch addresses" });
+  }
+}
+
+/* ===================== SAVE / UPDATE ADDRESSES ===================== */
+export async function saveAddresses(req, res) {
+  try {
+    const { addresses } = req.body;
+    const userEmail = req.user?.email;
+    const userId = req.user?._id || req.user?.id;
+
+    if (!Array.isArray(addresses)) {
+      return res.status(400).json({ message: "Addresses must be an array" });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      let dbUser = null;
+      if (userEmail) {
+        dbUser = await auth.findOneAndUpdate(
+          { email: userEmail.toLowerCase().trim() },
+          { addresses },
+          { new: true }
+        );
+      }
+      if (!dbUser && userId) {
+        try {
+          dbUser = await auth.findByIdAndUpdate(
+            userId,
+            { addresses },
+            { new: true }
+          );
+        } catch (e) {}
+      }
+
+      return res.status(200).json({
+        message: "Addresses updated successfully",
+        addresses: dbUser?.addresses || addresses,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Addresses updated successfully",
+      addresses,
+    });
+  } catch (error) {
+    console.error("SAVE ADDRESSES ERROR:", error);
+    return res.status(500).json({ message: "Failed to update addresses" });
+  }
+}
+
 
 
 

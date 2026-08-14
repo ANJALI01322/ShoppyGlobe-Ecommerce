@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, logout, updateProfile } from "../Controller/auth.controller.js";
+import { register, login, logout, updateProfile, getAddresses, saveAddresses } from "../Controller/auth.controller.js";
 import authMiddleware from "../Middleware/auth.js";
 
 const router = express.Router();
@@ -8,6 +8,8 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
 router.put("/profile", authMiddleware, updateProfile);
+router.get("/addresses", authMiddleware, getAddresses);
+router.put("/addresses", authMiddleware, saveAddresses);
 
 router.get("/me", authMiddleware, (req, res) => {
   res.status(200).json({
