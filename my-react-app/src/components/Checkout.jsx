@@ -164,31 +164,24 @@ function Checkout() {
       };
 
       try {
-        await api.post("/orders", orderPayload);
+        const res = await api.post("/orders", orderPayload);
+        if (!res.data?.success) {
+          throw new Error(res.data?.message || "Failed to create order");
+        }
+        return true;
       } catch (err) {
         console.error("Error saving order to backend:", err);
+        const errMsg = err.response?.data?.message || err.message || "Failed to save order";
+        alert(errMsg);
+        return false;
       }
-
-      // Save to localStorage as seamless fallback
-      try {
-        const existingOrders = JSON.parse(localStorage.getItem("pvx_user_orders") || "[]");
-        const localOrder = {
-          orderId: "ORD-" + Date.now() + "-" + Math.floor(1000 + Math.random() * 9000),
-          items: orderPayload.items,
-          totalAmount: total,
-          paymentMethod: paymentMethod,
-          paymentId: payId,
-          status: "Confirmed",
-          shippingAddress: orderPayload.shippingAddress,
-          createdAt: new Date().toISOString(),
-        };
-        existingOrders.unshift(localOrder);
-        localStorage.setItem("pvx_user_orders", JSON.stringify(existingOrders));
-      } catch (e) {}
     };
 
     const completeClearCart = async (payId = "") => {
-      await saveOrderToDatabase(payId);
+      const success = await saveOrderToDatabase(payId);
+      if (!success) {
+        return; // Do NOT clear cart or mark order placed if order/stock validation failed
+      }
 
       if (singleItem) {
         try {
