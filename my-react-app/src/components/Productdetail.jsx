@@ -173,13 +173,26 @@ export default function Productdetail() {
   }, [productId]);
 
   // =========================================================
-  // 2. Load Reviews
+  // 2. Load Reviews from MongoDB API
   // =========================================================
 
   useEffect(() => {
     if (productId) {
-      const data = getProductReviews(productId);
-      setReviewsData(data);
+      api
+        .get(`/reviews/${productId}`)
+        .then((res) => {
+          if (res.data) {
+            setReviewsData({
+              rating: res.data.rating || 4.5,
+              reviewCount: res.data.reviewCount || 0,
+              reviews: res.data.reviews || [],
+            });
+          }
+        })
+        .catch(() => {
+          const fallback = getProductReviews(productId);
+          setReviewsData(fallback);
+        });
     }
   }, [productId, reviewSubmittedMsg]);
 
@@ -384,62 +397,68 @@ export default function Productdetail() {
   };
 
   // =========================================================
-  // Add Review
+  // Add Review to MongoDB
   // =========================================================
 
-  const handleAddReview = (e) => {
+  const handleAddReview = async (e) => {
     e.preventDefault();
 
-    if (
-      !reviewName.trim() ||
-      !reviewText.trim()
-    ) {
+    if (!reviewText.trim()) {
       return;
     }
 
     try {
-      const existingReviews = JSON.parse(
-        localStorage.getItem("pvx_user_reviews") || "{}"
-      );
-
-      const itemReviews =
-        existingReviews[productId] || [];
-
-      const newEntry = {
-        id: Date.now(),
-        name: reviewName.trim(),
-        avatar: reviewName
-          .trim()
-          .slice(0, 2)
-          .toUpperCase(),
-        date: "Just now",
+      const res = await api.post("/reviews", {
+        productId,
         rating: Number(reviewRating),
         text: reviewText.trim(),
-      };
+      });
 
-      existingReviews[productId] = [
-        newEntry,
-        ...itemReviews,
-      ];
+      if (res.data) {
+        setReviewText("");
+        setReviewRating(5);
+        setReviewSubmittedMsg("Thank you! Your review has been added. ✅");
 
-      localStorage.setItem(
-        "pvx_user_reviews",
-        JSON.stringify(existingReviews)
-      );
+        // Refresh reviews
+        const updated = await api.get(`/reviews/${productId}`);
+        if (updated.data) {
+          setReviewsData({
+            rating: updated.data.rating || 4.5,
+            reviewCount: updated.data.reviewCount || 0,
+            reviews: updated.data.reviews || [],
+          });
+        }
 
-      setReviewName("");
-      setReviewText("");
-      setReviewRating(5);
-
-      setReviewSubmittedMsg(
-        "Thank you! Your review has been added."
-      );
-
+        setTimeout(() => {
+          setReviewSubmittedMsg("");
+        }, 4000);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || "Failed to submit review.";
+      setReviewSubmittedMsg(msg);
       setTimeout(() => {
         setReviewSubmittedMsg("");
       }, 4000);
+    }
+  };
+
+  // =========================================================
+  // Delete Review from MongoDB
+  // =========================================================
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await api.delete(`/reviews/${reviewId}`);
+      const updated = await api.get(`/reviews/${productId}`);
+      if (updated.data) {
+        setReviewsData({
+          rating: updated.data.rating || 4.5,
+          reviewCount: updated.data.reviewCount || 0,
+          reviews: updated.data.reviews || [],
+        });
+      }
     } catch (err) {
-      console.error(err);
+      alert(err.response?.data?.message || "Failed to delete review.");
     }
   };
 
@@ -1216,9 +1235,28 @@ export default function Productdetail() {
 
                   </div>
 
-                  <StarRating
-                    rating={rev.rating}
-                  />
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <StarRating
+                      rating={rev.rating}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteReview(rev._id || rev.id)}
+                      style={{
+                        background: "rgba(255, 77, 109, 0.1)",
+                        border: "1px solid rgba(255, 77, 109, 0.3)",
+                        color: "#ff4d6d",
+                        padding: "4px 10px",
+                        borderRadius: "6px",
+                        fontSize: "11px",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                      }}
+                      title="Delete your review"
+                    >
+                      Delete
+                    </button>
+                  </div>
 
                 </div>
 
