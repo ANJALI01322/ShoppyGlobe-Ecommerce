@@ -14,6 +14,7 @@ import Wishlist from "./components/Wishlist";
 import Profile from "./components/Profile";
 import Address from "./components/Address";
 import Orders from "./components/Orders";
+import AiAssistant from "./components/AiAssistant";
 
 function App() {
   const location = useLocation();
@@ -103,6 +104,8 @@ function App() {
         {/* 404 */}
         <Route path="*" element={<Notfound />} />
       </Routes>
+
+      <AiAssistant />
     </>
   );
 }

@@ -9,6 +9,7 @@ import paymentRoutes from "./Routes/payment.route.js";
 import orderRoutes from "./Routes/order.route.js";
 import wishlistRoutes from "./Routes/wishlist.route.js";
 import reviewRoutes from "./Routes/review.route.js";
+import aiRoutes from "./Routes/ai.route.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -32,6 +33,8 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/ai", aiRoutes);
+
 
 
 
