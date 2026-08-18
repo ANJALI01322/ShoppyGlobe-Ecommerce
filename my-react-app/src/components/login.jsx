@@ -73,7 +73,7 @@ export default function Login() {
           <div className="brand-content">
             <div className="brand-mark">S</div>
 
-            <p className="brand-label">WELCOME TO SHOPPYGLOBE</p>
+            <p className="brand-label">WELCOME TO SHOPPSYMART</p>
 
             <h1>
               Shop better.
@@ -105,7 +105,7 @@ export default function Login() {
           </div>
 
           <p className="brand-footer">
-            © {new Date().getFullYear()} ShoppyGlobe
+            © {new Date().getFullYear()} ShoppsyMart
           </p>
         </div>
 
@@ -219,7 +219,7 @@ export default function Login() {
 
             {/* Divider */}
             <div className="login-divider">
-              <span>NEW TO SHOPPYGLOBE?</span>
+              <span>NEW TO SHOPPSYMART?</span>
             </div>
 
             {/* Register */}

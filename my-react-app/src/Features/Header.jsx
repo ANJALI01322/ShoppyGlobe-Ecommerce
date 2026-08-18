@@ -114,7 +114,7 @@ function Header() {
           <span className="logo-mark">S</span>
 
           <span className="logo-text">
-            Shoppy<span>Globe</span>
+            Shoppsy<span>Mart</span>
           </span>
         </Link>
 

@@ -1212,8 +1212,8 @@ function ProductList() {
               to="/"
               className="footer-logo"
             >
-              Shoppy
-              <span>Globe</span>
+              Shoppsy
+              <span>Mart</span>
             </Link>
 
             <p>
@@ -1321,7 +1321,7 @@ function ProductList() {
         <div className="footer-bottom">
 
           <span>
-            © 2026 ShoppyGlobe.
+            © 2026 ShoppsyMart.
             All rights reserved.
           </span>
 

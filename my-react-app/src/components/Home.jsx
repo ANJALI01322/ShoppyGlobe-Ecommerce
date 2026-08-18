@@ -121,7 +121,7 @@ function Home() {
         <div className="hero-content">
           <div className="hero-kicker">
             <span className="live-dot" />
-            SHOPPYGLOBE FESTIVE EDIT 2026
+            SHOPPSYMART FESTIVE EDIT 2026
           </div>
 
           <h1>
@@ -185,7 +185,7 @@ function Home() {
           <div className="hero-image-main">
             <img
               src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=90"
-              alt="ShoppyGlobe shopping collection"
+              alt="ShoppsyMart shopping collection"
             />
 
             <div className="hero-image-overlay" />
@@ -263,7 +263,7 @@ function Home() {
           <div className="hero-number">01</div>
 
           <div className="hero-side-label">
-            <span>SHOPPYGLOBE</span>
+            <span>SHOPPSYMART</span>
             <i />
             <span>2026 EDIT</span>
           </div>
@@ -443,13 +443,13 @@ function Home() {
           />
 
           <div className="editorial-image-label">
-            <span>SHOPPYGLOBE</span>
+            <span>SHOPPSYMART</span>
             <strong>THE STANDARD</strong>
           </div>
         </div>
 
         <div className="editorial-content">
-          <span className="eyebrow">THE SHOPPYGLOBE STANDARD</span>
+          <span className="eyebrow">THE SHOPPSYMART STANDARD</span>
 
           <h2>
             Good design.
@@ -459,7 +459,7 @@ function Home() {
 
           <p>
             From things you need to things you didn't know you wanted,
-            ShoppyGlobe brings together products that fit beautifully into
+            ShoppsyMart brings together products that fit beautifully into
             everyday life.
           </p>
 
@@ -568,7 +568,7 @@ function Home() {
         <div className="footer-top">
           <div className="footer-brand">
             <Link to="/" className="footer-logo">
-              Shoppy<span>Globe</span>
+              Shoppsy<span>Mart</span>
             </Link>
 
             <p>
@@ -653,7 +653,7 @@ function Home() {
         </div>
 
         <div className="footer-bottom">
-          <span>© 2026 ShoppyGlobe. All rights reserved.</span>
+          <span>© 2026 ShoppsyMart. All rights reserved.</span>
 
           <div>
             <a href="/" onClick={(e) => e.preventDefault()}>
